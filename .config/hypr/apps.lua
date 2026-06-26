@@ -1,0 +1,5 @@
+-- App-specific tweaks.
+local paths = require("hypr.paths")
+local require_all = require("hypr.require_all")
+
+require_all.files(paths.config_home .. "/hypr/apps", "hypr.apps")
