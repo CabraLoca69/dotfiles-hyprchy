@@ -37,6 +37,9 @@ hl.env("OMARCHY_SCREENRECORD_DIR", "/home/cloca/ssd/Videos/Screenrecording")
 hl.window_rule({ match = {class = "discord"}, opacity = "1 0.93"})
 hl.window_rule({match = {class = "discord"}, monitor = "DP-3" })
 
+--firefox
+hl.window_rule({match = {class = "firefox"}, opacity = "1 0.95"})
+
 --spotify
 hl.window_rule({match = {class = "Spotify"}, monitor = "DP-3" })
 
@@ -48,3 +51,6 @@ hl.window_rule({match = {class = "org.omarchy.nvtop"}, float = true })
 
 -- nautilus 
 hl.window_rule({match = {class = "org.gnome.Nautilus"}, float = true })
+
+-- terminal flotante (apps/system.lua)
+hl.window_rule({match = {tag = "floating-window*"}, size = {900, 600}})

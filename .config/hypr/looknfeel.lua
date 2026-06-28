@@ -20,7 +20,7 @@ hl.config({
   },
 
   decoration = {
-    rounding = 0,
+    rounding = 10,
 
     shadow = {
       enabled = true,
@@ -31,11 +31,14 @@ hl.config({
 
     blur = {
       enabled = true,
-      size = 2,
+      size = 8,
       passes = 2,
       special = true,
       brightness = 0.60,
       contrast = 0.75,
+      ignore_opacity = true,
+      new_optimizations = true,
+      vibrancy = 0.1696,
     },
   },
 

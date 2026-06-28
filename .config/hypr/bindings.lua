@@ -18,7 +18,7 @@ o.bind("SUPER + SHIFT + ALT + B", "Browser (private)", { omarchy = "browser --pr
 o.bind("SUPER + SHIFT + N", "Editor", { omarchy = "editor" })
 
 -- wallpaper bind
-o.bind("SUPER + ALT + X", "Wallpaper selector", "alacritty -e /home/cloca/.local/bin/wallpaper-picker.sh")
+o.bind("SUPER + ALT + X", "Wallpaper selector", "omarchy-launch-floating-terminal /home/cloca/.local/bin/wallpaper-picker.sh")
 
 -- obs keybindings
 o.bind("CTRL + SHIFT + F1",
@@ -28,7 +28,7 @@ o.bind("CTRL + SHIFT + F1",
 )
 
 -- sicroniza y actualiza
-o.bind("SUPER + ALT + CTRL + U", "Update system", "alacritty -e paru -Syu")
+o.bind("SUPER + ALT + CTRL + U", "Update system", "omarchy-launch-floating-terminal-with-presentation paru -Syu")
 
 --nautilus
 o.bind("SHIFT + ALT + E", "Open filexplorer", "nautilus")

@@ -95,7 +95,7 @@ sudo pacman -Rns <paquete>
 ### 4. Reemplazar la carpeta de Omarchy con el repo
 
 ```bash
-# Respaldar por si algo sale mal
+# Respaldar por si algo sale mal <- en esta parte seguro explota todo, se va a desconfigurar entero
 mv ~/.local/share/omarchy ~/.local/share/omarchy.bak
 
 # Clonar el repo
