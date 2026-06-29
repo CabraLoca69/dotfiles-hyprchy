@@ -19,6 +19,52 @@ section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 # ──────────────────────────────────────────────
 # Dependencias
 # ──────────────────────────────────────────────
+
+PACMAN_DEPS=(
+    # Hyprland y compositor
+    hyprland
+    hyprlock
+    hypridle
+    hyprsunset
+    hyprpicker
+    xdg-desktop-portal-hyprland
+    xdg-desktop-portal-gtk
+    uwsm
+
+    # Waybar y notificaciones
+    waybar
+    mako
+    playerctl
+    pamixer
+    wireplumber
+    wl-clipboard
+
+    # Terminal y shell
+    alacritty
+    fzf
+    jq
+    bat
+    eza
+    starship
+    zoxide
+
+    # Archivos y sistema
+    nautilus
+    gvfs-mtp
+    grim
+    slurp
+    swaybg
+    polkit-gnome
+    gnome-keyring
+    gnome-keyring
+    libsecret
+
+    # Fuentes
+    noto-fonts
+    noto-fonts-emoji
+    ttf-jetbrains-mono-nerd
+)
+
 AUR_DEPS=(
     elephant
     elephant-bluetooth
@@ -40,12 +86,29 @@ AUR_DEPS=(
     hyprland-preview-share-picker-git
 )
 
-# Paquetes de CachyOS (no AUR)
 CACHYOS_DEPS=(
     walker
 )
 
-install_deps() {
+install_pacman_deps() {
+    section "Instalando dependencias (pacman)"
+
+    local missing=()
+    for pkg in "${PACMAN_DEPS[@]}"; do
+        if ! pacman -Qi "$pkg" &>/dev/null; then
+            missing+=("$pkg")
+        fi
+    done
+
+    if [ ${#missing[@]} -eq 0 ]; then
+        info "Todas las dependencias pacman ya están instaladas."
+    else
+        info "Paquetes a instalar: ${missing[*]}"
+        sudo pacman -S --needed "${missing[@]}"
+    fi
+}
+
+install_aur_deps() {
     section "Instalando dependencias (AUR)"
 
     if ! command -v paru &>/dev/null; then
@@ -66,34 +129,67 @@ install_deps() {
         info "Paquetes AUR a instalar: ${missing[*]}"
         paru -S --needed "${missing[@]}"
     fi
+}
 
+install_cachyos_deps() {
     section "Instalando dependencias (CachyOS)"
 
     if ! grep -q "^\[cachyos\]" /etc/pacman.conf 2>/dev/null; then
         warning "Repo de CachyOS no encontrado en pacman.conf."
         warning "Estos paquetes no se van a instalar: ${CACHYOS_DEPS[*]}"
-        warning "Seguí la guía en https://wiki.cachyos.net/installation/repos/ para agregarlo."
+        warning "Sin walker el launcher no va a funcionar."
+        warning "Seguí la guía en https://wiki.cachyos.net/installation/repos/ para agregarlo,"
+        warning "o instalá walker desde AUR: paru -S walker-bin"
         return
     fi
 
-    local missing_c=()
+    local missing=()
     for pkg in "${CACHYOS_DEPS[@]}"; do
         if ! pacman -Qi "$pkg" &>/dev/null; then
-            missing_c+=("$pkg")
+            missing+=("$pkg")
         fi
     done
 
-    if [ ${#missing_c[@]} -eq 0 ]; then
+    if [ ${#missing[@]} -eq 0 ]; then
         info "Todas las dependencias CachyOS ya están instaladas."
     else
-        info "Paquetes CachyOS a instalar: ${missing_c[*]}"
-        sudo pacman -S --needed "${missing_c[@]}"
+        info "Paquetes CachyOS a instalar: ${missing[*]}"
+        sudo pacman -S --needed "${missing[@]}"
+    fi
+}
+
+# ──────────────────────────────────────────────
+# PATH
+# ──────────────────────────────────────────────
+
+setup_path() {
+    section "Configurando PATH"
+
+    local shell_rc=""
+    if [[ "$SHELL" == *"fish"* ]]; then
+        shell_rc="$HOME/.config/fish/config.fish"
+        local path_line="fish_add_path \$HOME/.local/share/omarchy/bin"
+    elif [[ "$SHELL" == *"zsh"* ]]; then
+        shell_rc="$HOME/.zshrc"
+        local path_line='export PATH="$HOME/.local/share/omarchy/bin:$PATH"'
+    else
+        shell_rc="$HOME/.bashrc"
+        local path_line='export PATH="$HOME/.local/share/omarchy/bin:$PATH"'
+    fi
+
+    if grep -q "omarchy/bin" "$shell_rc" 2>/dev/null; then
+        info "PATH ya configurado en $shell_rc"
+    else
+        echo "$path_line" >> "$shell_rc"
+        info "PATH agregado a $shell_rc"
+        warning "Reiniciá la shell o ejecutá: source $shell_rc"
     fi
 }
 
 # ──────────────────────────────────────────────
 # Symlinks
 # ──────────────────────────────────────────────
+
 symlink() {
     local src="$1"
     local dst="$2"
@@ -134,28 +230,33 @@ create_symlinks() {
 # ──────────────────────────────────────────────
 # Avisos post-instalación
 # ──────────────────────────────────────────────
+
 post_install_notes() {
     section "Notas post-instalación"
 
     echo -e "${YELLOW}Atención — configuración manual requerida:${NC}"
     echo ""
-    echo "  1. waybar-cpu-watts.sh usa paths de hwmon hardcodeados."
+    echo "  1. waybar-cpu-watts usa paths de hwmon hardcodeados."
     echo "     Verificá que sean correctos en tu hardware:"
     echo "       /sys/class/hwmon/hwmon3/energy9_input  (energía CPU)"
     echo "       /sys/class/hwmon/hwmon4/temp1_input    (temperatura CPU)"
-    echo "     Usá 'ls /sys/class/hwmon/' para identificar los correctos."
+    echo "     Usá 'ls /sys/class/hwmon/' y 'cat /sys/class/hwmon/hwmon*/name'"
+    echo "     para identificar los correctos."
     echo ""
-    echo "  2. waybar-gpu.sh usa ROCm (AMD)."
+    echo "  2. waybar-gpu usa ROCm (AMD)."
     echo "     Si el hardware es distinto ajustá el script manualmente."
     echo ""
     echo "  3. linux-wallpaperengine requiere Wallpaper Engine instalado en Steam."
     echo "     Sin eso el script no funciona, pero no rompe nada al iniciar."
-    echo ""
+    echo "     Puedes descomentar la 6ta linea del autostart para que se lanze swaybg"
+    echo "     Deberias instalar Swaybg si no lo tienes"
+    echo "     Aun asi de estas dotfiles se elimino el handler de fondos, buena suerte"
 }
 
 # ──────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────
+
 main() {
     echo -e "${CYAN}"
     echo "  ┌─────────────────────────────┐"
@@ -163,7 +264,10 @@ main() {
     echo "  └─────────────────────────────┘"
     echo -e "${NC}"
 
-    install_deps
+    install_pacman_deps
+    install_aur_deps
+    install_cachyos_deps
+    setup_path
     create_symlinks
     post_install_notes
 
