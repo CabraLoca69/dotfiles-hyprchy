@@ -1,0 +1,58 @@
+#!/bin/bash
+# omarchy:summary=Run the Omarchy screensaver showing a random wallpaper/gif as ASCII art.
+STATE_FILE="/tmp/screensaver-current"
+
+screensaver_in_focus() {
+  hyprctl activewindow -j | jq -e '.class == "org.omarchy.screensaver"' >/dev/null 2>&1
+}
+exit_screensaver() {
+  hyprctl eval 'hl.config({ cursor = { invisible = false } })' &>/dev/null || hyprctl keyword cursor:invisible false &>/dev/null || true
+  pkill -x chafa 2>/dev/null
+  pkill -f org.omarchy.screensaver 2>/dev/null
+  exit 0
+}
+trap exit_screensaver SIGINT SIGTERM SIGHUP SIGQUIT
+printf '\033]11;rgb:00/00/00\007'
+hyprctl eval 'hl.config({ cursor = { invisible = true } })' &>/dev/null || hyprctl keyword cursor:invisible true &>/dev/null
+
+show_static() {
+  local IMG="$1"
+  clear
+  chafa --symbols all --align="center,center"  "$IMG" 
+
+  for i in $(seq 1 240); do
+    if read -n1 -t 1 || ! screensaver_in_focus; then
+      exit_screensaver
+    fi
+  done
+}
+
+show_gif() {
+  local GIF="$1"
+  clear
+
+  # chafa reproduce el gif animado directamente; --watch no aplica, usamos su loop nativo
+  timeout 30 chafa --stretch --align="center,center" --duration=240 "$GIF" \
+    2> /dev/null &
+  CHAFA_PID=$!
+
+  # Mientras se reproduce, seguimos chequeando input
+  while kill -0 "$CHAFA_PID" 2>/dev/null; do
+    if read -n1 -t 1 || ! screensaver_in_focus; then
+      kill "$CHAFA_PID" 2>/dev/null
+      exit_screensaver
+    fi
+  done
+}
+
+while true; do
+  FILE=$(find ~/ssd/wallpapers/screensavers \
+    -type f \
+    \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.gif" \) \
+    | shuf -n1)
+  if [[ "$FILE" == *.gif ]]; then
+    show_gif "$FILE"
+  else
+    show_static "$FILE"
+  fi
+done

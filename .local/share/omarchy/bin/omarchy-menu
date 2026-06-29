@@ -1,0 +1,192 @@
+#!/bin/bash
+
+# omarchy:summary=Launch the Omarchy Menu or takes a parameter to jump straight to a submenu.
+
+# Set to true when going directly to a submenu, so we can exit directly
+BACK_TO_EXIT=false
+
+back_to() {
+  local parent_menu="$1"
+
+  if [[ $BACK_TO_EXIT == "true" ]]; then
+    exit 0
+  elif [[ -n $parent_menu ]]; then
+    "$parent_menu"
+  else
+    show_main_menu
+  fi
+}
+
+toggle_existing_menu() {
+  if pgrep -f "walker.*--dmenu" >/dev/null; then
+    walker --close >/dev/null 2>&1
+    exit 0
+  fi
+}
+
+menu() {
+  local prompt="$1"
+  local options="$2"
+  local extra="$3"
+  local preselect="$4"
+
+  read -r -a args <<<"$extra"
+
+  if [[ -n $preselect ]]; then
+    local index
+    index=$(echo -e "$options" | grep -nxF "$preselect" | cut -d: -f1)
+    if [[ -n $index ]]; then
+      args+=("-c" "$index")
+    fi
+  fi
+
+  echo -e "$options" | omarchy-launch-walker --dmenu --width 295 --minheight 1 --maxheight 630 -p "$prompt…" "${args[@]}" 2>/dev/null
+}
+
+terminal() {
+  xdg-terminal-exec --app-id=org.omarchy.terminal "$@"
+}
+
+present_terminal() {
+  omarchy-launch-floating-terminal -d ${2:+-t "$2"} $1
+}
+present_terminal_nologo() {
+  omarchy-launch-floating-terminal ${2:+-t "$2"} $1
+}
+
+open_in_editor() {
+  notify-send -u low "Editing config file" "$1"
+  omarchy-launch-editor "$1"
+}
+
+hypr_config_file() {
+  local name="$1"
+  printf '%s/.config/hypr/%s.lua' "$HOME" "$name"
+}
+
+
+show_toggle_menu() {
+  local options="󰔎  Nightlight\n󱫖  Idle Lock\n󰂛  Notifications\n󰍜  Top Bar\n󱂬  Workspace Layout\n  Window Gaps\n  1-Window Ratio\n󰍹  Monitor Scaling\n  Direct Boot\n󰟵  Passwordless Sudo"
+
+  case $(menu "Toggle" "$options") in
+  *Nightlight*) omarchy-toggle-nightlight ;;
+  *Idle*) omarchy-toggle-idle ;;
+  *Notifications*) omarchy-toggle-notification-silencing ;;
+  *Bar*) omarchy-toggle-waybar ;;
+  *Layout*) omarchy-hyprland-workspace-layout-toggle ;;
+  *Ratio*) omarchy-hyprland-window-single-square-aspect-toggle ;;
+  *Gaps*) omarchy-hyprland-window-gaps-toggle ;;
+  *Scaling*) omarchy-hyprland-monitor-scaling-cycle ;;
+  *"Direct Boot"*) present_terminal omarchy-config-direct-boot ;;
+  *"Passwordless Sudo"*) present_terminal omarchy-sudo-passwordless ;;
+  *) show_main_menu;;
+  esac
+}
+
+show_style_menu() {
+  case $(menu "Style" "󰸌  Theme\n󰟵  Unlock\n  Font\n  Background\n󰍜  Waybar\n󰘇  Corners") in
+
+  *Theme*) omarchy-launch-or-focus -f -t 'Theme-selector' 'Theme-selector' theme-manager;;
+  *Unlock*) omarchy-launch-walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
+  *Font*) show_font_menu ;;
+  *Background*) show_background_menu ;;
+  *Corners*) show_style_corners_menu ;;
+  *Waybar*) show_waybar_position_menu ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_style_corners_menu() {
+  case $(omarchy-menu-select "Corners" "󰝣  Sharp" "󰘇  Round") in
+  *Sharp*) omarchy-style-corners sharp ;;
+  *Round*) omarchy-style-corners round ;;
+  *) show_style_menu ;;
+  esac
+}
+
+show_waybar_position_menu() {
+  case $(menu "Waybar Position" "󰁝  Top\n󰁅  Bottom\n󰁍  Left\n󰁔  Right") in
+  *Top*) omarchy-style-waybar-position top ;;
+  *Bottom*) omarchy-style-waybar-position bottom ;;
+  *Left*) omarchy-style-waybar-position left ;;
+  *Right*) omarchy-style-waybar-position right ;;
+  *) show_style_menu ;;
+  esac
+}
+
+show_background_menu() {
+  omarchy-launch-or-focus -f -t 'Wallpaper-selector' 'Wallpaper-selector' wallpaper-picker
+}
+
+show_font_menu() {
+  theme=$(menu "Font" "$(omarchy-font-list)" "--width 350" "$(omarchy-font-current)")
+  if [[ $theme == "CNCLD" || -z $theme ]]; then
+    back_to show_style_menu
+  else
+    omarchy-font-set "$theme"
+  fi
+}
+
+show_setup_config_menu() {
+  case $(menu "Setup" "  Hyprland\n  Hypridle\n  Hyprlock\n  Hyprsunset\n  Autostart\n  Bindings\n󰟵  Menu\n  Swayosd\n󰌧  Walker\n󰍜  Waybar\n󰞅  XCompose") in
+  *Hyprland*) open_in_editor "$(hypr_config_file hyprland)" ;;
+  *Hypridle*) open_in_editor ~/.config/hypr/hypridle.conf && omarchy-restart-hypridle ;;
+  *Hyprlock*) open_in_editor ~/.config/hypr/hyprlock.conf ;;
+  *Hyprsunset*) open_in_editor ~/.local/bin/hyprsunset_daynight.sh && omarchy-restart-hyprsunset ;;
+  *Autostart*) open_in_editor ~/.config/hypr/autostart.lua ;;
+  *Bindings*) open_in_editor ~/.config/hypr/bindings.lua;;
+  *Menu*) open_in_editor ~/.local/share/omarchy/bin/omarchy-menu;;
+  *Swayosd*) open_in_editor ~/.config/swayosd/config.toml && omarchy-restart-swayosd ;;
+  *Walker*) open_in_editor ~/.config/walker/config.toml && omarchy-restart-walker ;;
+  *Waybar*) open_in_editor ~/.config/waybar/config.jsonc && omarchy-restart-waybar ;;
+  *XCompose*) open_in_editor ~/.XCompose && omarchy-restart-xcompose ;;
+  *) show_main_menu ;;
+  esac
+}
+
+show_about() {
+  omarchy-launch-about
+}
+
+show_system_menu() {
+  local options="󱄄  Screensaver\n  Lock"
+  options="$options\n󰍃  Logout\n󰜉  Restart\n󰐥  Shutdown"
+
+  case $(menu "System" "$options") in
+  *Screensaver*) omarchy-launch-screensaver force ;;
+  *Lock*) omarchy-system-lock ;;
+  *Logout*) omarchy-system-logout ;;
+  *Restart*) omarchy-system-reboot ;;
+  *Shutdown*) omarchy-system-shutdown ;;
+  *) back_to show_main_menu ;;
+  esac
+}
+
+show_main_menu() {
+  go_to_menu "$(menu "Go" "  Style\n  Update\n  Config\n󰭌  Toggle\n󰀻  Apps\n  System\n  About")"
+}
+
+go_to_menu() {
+  case "${1,,}" in
+  *apps*) walker -p "Launch…" ;;
+  *toggle*) show_toggle_menu ;;
+  *style*) show_style_menu ;;
+  *config*) show_setup_config_menu ;;
+  *update*) omarchy-launch-or-focus -f -d -t "Update" "Update" "paru -Syu";; #ojo con esto
+  *about*) show_about ;;
+  *system*) show_system_menu ;;
+  esac
+}
+
+# Allow user extensions and overrides
+USER_EXTENSIONS="$HOME/.config/omarchy/extensions/menu.sh"
+[[ -f $USER_EXTENSIONS ]] && source "$USER_EXTENSIONS"
+
+toggle_existing_menu
+
+if [[ -n $1 ]]; then
+  BACK_TO_EXIT=true
+  go_to_menu "$1"
+else
+  show_main_menu
+fi

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# omarchy:summary=Launch a floating terminal with the presentation wrapper
+# omarchy:args=<command>
+
+cmd="$*"
+exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.floating.terminal --title=Terminal -e bash -c "omarchy-show-logo; $cmd; if (( \$? != 130 )); then omarchy-show-done; fi"

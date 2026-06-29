@@ -1,0 +1,9 @@
+#!/bin/bash
+if pgrep -f "hyprsunset_daynight" > /dev/null; then
+    pkill -f "hyprsunset_daynight"
+    hyprsunset -t 6000
+    notify-send -u low "   Nightlight automático desactivado"
+else
+    bash ~/.local/bin/hyprsunset_daynight.sh &
+    notify-send -u low "  Nightlight automático activado"
+fi

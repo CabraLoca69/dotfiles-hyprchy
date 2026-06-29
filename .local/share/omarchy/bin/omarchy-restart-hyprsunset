@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# omarchy:summary=Restart the hyprsunset service (used for blue light filtering/night light).
+if pgrep -f "hyprsunset_daynight" > /dev/null; then
+    pkill -f "hyprsunset_daynight"
+    sleep 2
+    bash ~/.local/bin/hyprsunset_daynight.sh &
+fi
