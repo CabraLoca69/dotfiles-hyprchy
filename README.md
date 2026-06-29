@@ -81,6 +81,8 @@ chmod +x install.sh
 
 ## Hardware notes
 
+You may reconfigure hyprland for your monitors, go to .config/hypr/monitors.lua and change that
+
 Some Waybar scripts read sensor paths that vary by hardware.
 At the moment the only waybar modified like this is in the theme sakura-mochi, you can change the active modules if you want, custom/gpu and custom/cpu-watts are the ones that uses this scripts
 
