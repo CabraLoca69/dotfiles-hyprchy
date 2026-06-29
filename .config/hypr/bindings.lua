@@ -7,18 +7,17 @@ require("hypr.bindings.media")
 require("hypr.bindings.clipboard")
 require("hypr.bindings.tiling-v2")
 require("hypr.bindings.utilities")
-
--- Application bindings without Omarchy's preinstalled web apps, TUIs, or desktop apps.
-o.bind("SUPER + RETURN", "Terminal", { omarchy = "terminal" })
-o.bind("SUPER + SHIFT + RETURN", "Browser", { omarchy = "browser" })
-o.bind("SUPER + SHIFT + F", "File manager", { omarchy = "nautilus" })
-o.bind("SUPER + ALT + SHIFT + F", "File manager (cwd)", { omarchy = "nautilus-cwd" })
-o.bind("SUPER + SHIFT + B", "Browser", { omarchy = "browser" })
+ 
+o.bind("SUPER + RETURN", "Terminal", "omarchy-launch-floating-terminal -d exec bash")
 o.bind("SUPER + SHIFT + ALT + B", "Browser (private)", { omarchy = "browser --private" })
+o.bind("SUPER + SHIFT + B", "Browser", { omarchy = "browser" })
 o.bind("SUPER + SHIFT + N", "Editor", { omarchy = "editor" })
 
 -- wallpaper bind
-o.bind("SUPER + ALT + X", "Wallpaper selector", "omarchy-launch-floating-terminal /home/cloca/.local/bin/wallpaper-picker.sh")
+o.bind("SUPER + ALT + X", "Wallpaper selector", "omarchy-launch-or-focus -f -t 'Wallpaper-selector' 'Wallpaper-selector' wallpaper-picker")
+
+-- sicroniza y actualiza
+o.bind("SUPER + ALT + CTRL + U", "Update system", "omarchy-launch-or-focus -f -d -t 'Update' 'Update' 'paru -Syu'")
 
 -- obs keybindings
 o.bind("CTRL + SHIFT + F1",
@@ -27,8 +26,6 @@ o.bind("CTRL + SHIFT + F1",
                 window = "class:^(com\\.obsproject\\.Studio)$" })
 )
 
--- sicroniza y actualiza
-o.bind("SUPER + ALT + CTRL + U", "Update system", "omarchy-launch-floating-terminal-with-presentation paru -Syu")
 
 --nautilus
 o.bind("SHIFT + ALT + E", "Open filexplorer", "nautilus")

@@ -6,7 +6,6 @@ o.bind_menu("SUPER + CTRL + H", "Hardware menu", "hardware")
 o.bind_menu("SUPER + ALT + SPACE", "Omarchy menu", nil)
 o.bind_menu("SUPER + SHIFT + code:201", "Omarchy menu", nil)
 o.bind_menu("SUPER + ESCAPE", "System menu", "system")
-o.bind_menu("XF86PowerOff", "Power menu", "system", { locked = true })
 o.bind("SUPER + K", "Show key bindings", "omarchy-menu-keybindings")
 o.bind("SUPER + ALT + K", "Show Tmux key bindings", "omarchy-menu-tmux-keybindings")
 o.bind("XF86Calculator", "Calculator", "gnome-calculator")
@@ -36,7 +35,6 @@ o.bind("switch:on:Lid Switch", nil, "omarchy-hw-external-monitors && omarchy-hyp
 o.bind("switch:off:Lid Switch", nil, "omarchy-hyprland-monitor-internal on", { locked = true })
 
 o.bind("PRINT", "Screenshot", "omarchy-capture-screenshot")
-o.bind_menu("ALT + PRINT", "Screenrecording", "screenrecord")
 o.bind("SUPER + PRINT", "Color picker", "pkill hyprpicker || hyprpicker -a")
 o.bind("SUPER + CTRL + PRINT", "Extract text (OCR) from screenshot", "omarchy-capture-text-extraction")
 
@@ -67,3 +65,4 @@ o.bind("SUPER + CTRL + ALT + Z", "Reset zoom", function()
 end)
 
 o.bind("SUPER + CTRL + L", "Lock system", "omarchy-system-lock")
+o.bind("XF86PowerOff", "Shutdown", "omarchy-system-shutdown")

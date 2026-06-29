@@ -51,6 +51,11 @@ hl.window_rule({match = {class = "org.omarchy.nvtop"}, float = true })
 
 -- nautilus 
 hl.window_rule({match = {class = "org.gnome.Nautilus"}, float = true })
+hl.window_rule({match = {class = "org.gnome.Nautilus"}, pin = true}) 
 
 -- terminal flotante (apps/system.lua)
 hl.window_rule({match = {tag = "floating-window*"}, size = {900, 600}})
+hl.window_rule({match = {tag = "floating-window*"}, pin = true})
+
+hl.window_rule({match = {initial_title = "Terminal"}, tag = '-floating-window*'})
+hl.window_rule({match = {initial_title = "Terminal"}, size = {1100, 800}})
