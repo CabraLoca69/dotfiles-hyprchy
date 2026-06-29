@@ -35,3 +35,7 @@ o.bind("SHIFT + ALT + D", "Open discord", "discord")
 o.bind("SHIFT + ALT + S", "Open steam", "steam")
 --spotify
 o.bind("SHIFT + CTRL + S", "Open spotify", "spotify")
+
+--reload things
+o.bind("SUPER + SHIFT + CTRL + ALT + W", "Reload Waybar", "omarchy-restart-waybar")
+o.bind("SUPER + SHIFT + CTRL + ALT + H", "Reload Hyprland", "xdg-terminal-exec hyprctl reload")

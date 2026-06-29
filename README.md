@@ -1,3 +1,11 @@
+## Hardware compatibility
+
+Tested on AMD CPU + AMD GPU (ROCm). Other hardware configurations are not guaranteed to work out of the box:
+
+- **Nvidia** — Hyprland has known issues with Nvidia. You may need additional configuration. See [Hyprland wiki - Nvidia](https://wiki.hyprland.org/Nvidia/).
+- **Intel GPU** — should work but is untested.
+- **Laptops** — brightness, touchpad, and power profile scripts may need adjustment.
+
 # dotfiles-hyprchy
 
 Personal Hyprland setup built on top of a decoupled [Omarchy](https://omarchy.org) base.
