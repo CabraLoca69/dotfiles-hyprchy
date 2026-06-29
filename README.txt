@@ -1,4 +1,7 @@
 # dotfiles
+# ESTE REPOSITORIO ESTA EN DESARROLLO, NO RECOMIENDO HACER NADA DE LO QUE DICE ESTE README, ACTUAR BAJO DISCRECION
+
+
 
 Setup personal de Hyprland sobre una base de [Omarchy](https://omarchy.org) desacoplada.
 El entorno es un híbrido: Hyprland y Omarchy dependen uno del otro, pero Omarchy ya no gestiona sus propios archivos — todo vive en este repo.
