@@ -31,10 +31,11 @@
       "6": "六",
       "7": "七",
       "8": "八",
-      "9": "九"
+      "9": "九",
+      "10":"十"
     },
     "persistent-workspaces": {
-      "*": [1, 2, 3, 4, 5, 6, 7, 8]
+      "*": [1, 2, 3, 4, 5]
     }
   },
    "hyprland/window": {
@@ -69,11 +70,8 @@
   },
     "custom/update": {
     "format": "",
-    "exec": "omarchy-update-available",
-    "on-click": "omarchy-launch-floating-terminal-with-presentation omarchy-update",
-    "tooltip-format": "Omarchy update available",
-    "signal": 7,
-    "interval": 21600
+    "on-click": "omarchy-launch-floating-terminal -f -d -t 'Update' paru -Syu",
+    "tooltip-format": "Omarchy update available"
   },
     "backlight": {
     "device": "intel_backlight",

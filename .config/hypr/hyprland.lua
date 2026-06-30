@@ -33,6 +33,12 @@ hl.env("OMARCHY_SCREENSHOT_DIR", "/home/cloca/Imágenes/Screenshots")
 --directorio de grabacion de pantalla
 hl.env("OMARCHY_SCREENRECORD_DIR", "/home/cloca/ssd/Videos/Screenrecording")
 
+-- juegos de steam abren a la izquierda
+hl.window_rule(
+  {match = {class = "^steam_app_.*"}, 
+  monitor = "DP-1" 
+})
+
 -- ds 
 hl.window_rule({
   match = {class = "discord"}, 
@@ -53,16 +59,11 @@ hl.window_rule({
   monitor = "DP-3" 
 })
 
--- juegos de steam abren a la izquierda
-hl.window_rule(
-  {match = {class = "^steam_app_.*"}, 
-  monitor = "DP-1" 
-})
-
 -- nautilus 
 hl.window_rule({
   match = {class = "org.gnome.Nautilus"},
-  opacity = "1 0.98", 
+  opacity = "1 0.98",
+  size = {1000, 600}, 
   float = true,
   pin = true
 })
@@ -79,4 +80,13 @@ hl.window_rule({
   tag = '-floating-window*',
   size = {1100, 800}
 })
+
+--code
+hl.window_rule({
+  match = {initial_class =  "code-oss"},
+  float = true,
+  pin = true,
+  size = {1500, 900}
+})
+
 

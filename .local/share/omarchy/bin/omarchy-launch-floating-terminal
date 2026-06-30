@@ -25,16 +25,16 @@ while [[ "$1" == -* ]]; do
     esac
 done
 
-cmd="$*"
+cmd=("$@")
 
 if $decorated; then
-    if [[ -z "$cmd" ]]; then
+    if [[ -z "${cmd[@]}" ]]; then
         exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.floating.terminal --title="$title" -e bash -c "omarchy-show-logo; exec bash"
     else
         exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.floating.terminal --title="$title" -e bash -c "omarchy-show-logo; $cmd; if (( \$? != 130 )); then omarchy-show-done; fi"
     fi
 else
-    if [[ -z "$cmd" ]]; then
+    if [[ -z "${cmd[@]}" ]]; then
         exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.floating.terminal --title="$title" -e bash
     else
         exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.floating.terminal --title="$title" -e bash -c "$cmd"

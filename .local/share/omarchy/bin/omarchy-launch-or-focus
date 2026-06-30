@@ -1,10 +1,10 @@
 #!/bin/bash
 # omarchy:summary=Launch an app or focus an existing window matching a pattern
-# omarchy:args=[-f|--floating] [-d|--decorated] [-t|--title <title>] <window-pattern> [launch-command]
+# omarchy:args=[-f|--floating] [-d|--decorated] [-t|--title <title>] [launch-command]
 
 floating="false"
 decorated=""
-title=""
+title="Terminal"
 
 while [[ "$1" == -* ]]; do
     case "$1" in
@@ -31,17 +31,17 @@ while [[ "$1" == -* ]]; do
 done
 
 if [[ -z "$1" ]]; then
-    echo "Usage: omarchy-launch-or-focus [-f] [-d] [-t title] <window-pattern> [launch-command]"
+    echo "Usage: omarchy-launch-or-focus [-f] [-d] [-t title] [launch-command]"
     exit 1
 fi
 
-WINDOW_PATTERN="$1"
-USER_COMMAND="${2:-$WINDOW_PATTERN}"
+USER_COMMAND="$*"
+WINDOW_PATTERN="$title"
 
 if $floating; then
-    LAUNCH_COMMAND="omarchy-launch-floating-terminal ${decorated:+-d} ${title:+-t \"$title\"} $USER_COMMAND"
+    LAUNCH_COMMAND="omarchy-launch-floating-terminal ${decorated:+-d} -t \"$title\" $USER_COMMAND"
 else
-    LAUNCH_COMMAND="xdg-terminal-exec --app-id=$title $USER_COMMAND"
+    LAUNCH_COMMAND="xdg-terminal-exec --app-id=\"$title\" $USER_COMMAND"
 fi
 
 WINDOW_ADDRESS=$(hyprctl clients -j | jq -r --arg p "$WINDOW_PATTERN" '.[]|select((.class|test("\\b" + $p + "\\b";"i")) or (.title|test("\\b" + $p + "\\b";"i")))|.address' | head -n1)

@@ -8,16 +8,18 @@ require("hypr.bindings.clipboard")
 require("hypr.bindings.tiling-v2")
 require("hypr.bindings.utilities")
  
-o.bind("SUPER + RETURN", "Terminal", "omarchy-launch-floating-terminal -d exec bash")
+o.bind("SUPER + RETURN", "Terminal", "omarchy-launch-floating-terminal -d")
 o.bind("SUPER + SHIFT + ALT + B", "Browser (private)", { omarchy = "browser --private" })
 o.bind("SUPER + SHIFT + B", "Browser", { omarchy = "browser" })
 o.bind("SUPER + SHIFT + N", "Editor", { omarchy = "editor" })
 
 -- wallpaper bind
-o.bind("SUPER + ALT + X", "Wallpaper selector", "omarchy-launch-or-focus -f -t 'Wallpaper-selector' 'Wallpaper-selector' wallpaper-picker")
+o.bind("SUPER + ALT + X", "Wallpaper selector", "omarchy-launch-or-focus -f -t 'Wallpaper-selector' wallpaper-picker")
+-- theme selector
+o.bind("SUPER + ALT + C", "Wallpaper selector", "omarchy-launch-or-focus -f -t 'Theme-selector' theme-manager")
 
 -- sicroniza y actualiza
-o.bind("SUPER + ALT + CTRL + U", "Update system", "omarchy-launch-or-focus -f -d -t 'Update' 'Update' 'paru -Syu'")
+o.bind("SUPER + ALT + CTRL + U", "Update system", "omarchy-launch-or-focus -f -d -t 'Update' paru -Syu")
 
 -- obs keybindings
 o.bind("CTRL + SHIFT + F1",

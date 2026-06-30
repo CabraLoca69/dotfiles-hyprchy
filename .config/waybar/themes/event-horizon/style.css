@@ -104,7 +104,7 @@ tooltip {
 }
 
 #workspaces button.active {
-    color: @love;
+    color: #26bbd9;
     opacity: 1;
 }
 
@@ -138,6 +138,7 @@ tooltip {
 #custom-notification-silencing-indicator,
 #custom-omarchy,
 #custom-screenrecording-indicator,
+
 #custom-updatespacman {
   min-width: 16px;
   margin: 1px 3px 1px 3px;
@@ -154,61 +155,71 @@ tooltip {
 #custom-omarchy {
   border-radius: 0;
   border-right: 1px solid alpha(@text, 0.15);
-  color: @gold;
+  color: #ee64ac;
   font-size: 14px;
 }
 
 #clock {
   border-radius: 0;
   border-right: 1px solid alpha(@text, 0.15);
-  color: @gold;
+  color: #ee64ac;
 }
 
 #bluetooth {
   border-radius: 0;
   border-right: 1px solid alpha(@text, 0.15);
-  color: @foam;
+  color: #26bbd9;
 }
 
 #memory {
   border-radius: 0;
   border-left: 1px solid alpha(@text, 0.15);
+  color: #24e46e;
 }
 
-#cpu {
-  color: @rose;
+/* Memory: verde -> celeste -> magenta */
+#memory.loaded {
+  color: #29d398; /* color2 - verde menta */
+}
+#memory.warning {
+  color: #26bbd9; /* accent - celeste */
+}
+#memory.critical {
+  color: #ee64ac; /* color5 - magenta/rosa */
 }
 
-#custom-cpu-watts.low    { 
-  color: #a6e3a1; 
+/* CPU watts: verde -> naranja/durazno -> rojo */
+#custom-cpu-watts.low {
+  color: #3fdaa4; /* color10 - verde brillante */
+}
+#custom-cpu-watts.medium {
+  color: #fab795; /* color3 - durazno */
+}
+#custom-cpu-watts.high {
+  color: #e95678; /* color1 - rojo/rosa */
 }
 
-#custom-cpu-watts.medium { 
-  color: #f9e2af; 
+/* GPU: celeste -> rosa -> rojo intenso */
+#custom-gpu.low {
+  color: #59e3e3; /* color6 - cian */
 }
-
-#custom-cpu-watts.high { 
-  color: #f38ba8; 
+#custom-gpu.medium {
+  color: #f075b5; /* color13 - rosa fuerte */
+}
+#custom-gpu.high {
+  color: #ec6a88; /* color9 - rojo coral */
 }
 
 #custom-cpu-watts {
     padding: 0 6px;
 }
 
-#custom-gpu.low { 
-  color: #51d345; 
-}
-
-#custom-gpu.medium { 
-  color: #e7bb5d; 
-}
-
-#custom-gpu.high { 
-  color: #e93265; 
-}
-
 #custom-gpu {
     padding: 0 6px;
+}
+
+#cpu {
+  color: @rose;
 }
 
 #battery {
@@ -219,16 +230,13 @@ tooltip {
   color: @foam;
 }
 
-#memory {
-  color: @gold;
-}
 
 #network {
-  color: @rose;
+  color: #ee64ac;
 }
 
 #pulseaudio {
-  color: @love;
+  color: #ee64ac;
 }
 
 #idle_inhibitor {

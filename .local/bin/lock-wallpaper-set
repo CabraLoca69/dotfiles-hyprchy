@@ -1,0 +1,35 @@
+#!/bin/bash
+# lock-wallpaper-set — toma los wallpapers activos de Wallpaper Engine
+# (uno por monitor) y los deja como fondo estático (swaybg) para el lockscreen.
+
+source "$HOME/.config/wallpaperengine/config"
+
+STATE="$HOME/.config/wallpaperengine/last_wallpaper.json"
+CACHE_DIR="$HOME/.cache/lock-wallpapers"
+
+[ ! -f "$STATE" ] && exit 0
+mkdir -p "$CACHE_DIR"
+
+extract_preview() {
+    local wid="$1"
+    local out="$2"
+    local dir="$WORKSHOP/$wid"
+
+    if [ -f "$dir/preview.jpg" ]; then
+        cp -f "$dir/preview.jpg" "$out"
+    elif [ -f "$dir/preview.gif" ]; then
+        if command -v ffmpeg >/dev/null 2>&1; then
+            ffmpeg -y -i "$dir/preview.gif" -vframes 1 "$out" -loglevel error
+        elif command -v magick >/dev/null 2>&1; then
+            magick "$dir/preview.gif[0]" "$out"
+        elif command -v convert >/dev/null 2>&1; then
+            convert "$dir/preview.gif[0]" "$out"
+        fi
+    fi
+}
+
+while IFS=: read -r mon_id _; do
+    wid=$(jq -r --arg m "$mon_id" '.monitors[$m] // empty' "$STATE")
+    [ -z "$wid" ] && continue
+    extract_preview "$wid" "$CACHE_DIR/${mon_id}.png"
+done < <(printf '%s\n' "${MONITORS[@]}")

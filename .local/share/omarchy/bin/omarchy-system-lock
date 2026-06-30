@@ -4,6 +4,7 @@
 # omarchy:group=system
 # omarchy:name=lock
 # omarchy:examples=omarchy system lock
+lock-wallpaper-set
 
 if ! pidof hyprlock >/dev/null; then
   (

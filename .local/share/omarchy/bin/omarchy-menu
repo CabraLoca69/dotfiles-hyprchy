@@ -84,23 +84,14 @@ show_toggle_menu() {
 }
 
 show_style_menu() {
-  case $(menu "Style" "󰸌  Theme\n󰟵  Unlock\n  Font\n  Background\n󰍜  Waybar\n󰘇  Corners") in
+  case $(menu "Style" "󰸌  Theme\n󰟵  Unlock\n  Font\n  Background\n󰍜  Waybar") in
 
-  *Theme*) omarchy-launch-or-focus -f -t 'Theme-selector' 'Theme-selector' theme-manager;;
+  *Theme*) omarchy-launch-or-focus -f -t 'Theme-selector' theme-manager;;
   *Unlock*) omarchy-launch-walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
   *Font*) show_font_menu ;;
   *Background*) show_background_menu ;;
-  *Corners*) show_style_corners_menu ;;
   *Waybar*) show_waybar_position_menu ;;
   *) show_main_menu ;;
-  esac
-}
-
-show_style_corners_menu() {
-  case $(omarchy-menu-select "Corners" "󰝣  Sharp" "󰘇  Round") in
-  *Sharp*) omarchy-style-corners sharp ;;
-  *Round*) omarchy-style-corners round ;;
-  *) show_style_menu ;;
   esac
 }
 
@@ -115,7 +106,7 @@ show_waybar_position_menu() {
 }
 
 show_background_menu() {
-  omarchy-launch-or-focus -f -t 'Wallpaper-selector' 'Wallpaper-selector' wallpaper-picker
+  omarchy-launch-or-focus -f -t 'Wallpaper-selector' wallpaper-picker
 }
 
 show_font_menu() {
@@ -131,7 +122,7 @@ show_setup_config_menu() {
   case $(menu "Setup" "  Hyprland\n  Hypridle\n  Hyprlock\n  Hyprsunset\n  Autostart\n  Bindings\n󰟵  Menu\n  Swayosd\n󰌧  Walker\n󰍜  Waybar\n󰞅  XCompose") in
   *Hyprland*) open_in_editor "$(hypr_config_file hyprland)" ;;
   *Hypridle*) open_in_editor ~/.config/hypr/hypridle.conf && omarchy-restart-hypridle ;;
-  *Hyprlock*) open_in_editor ~/.config/hypr/hyprlock.conf ;;
+  *Hyprlock*) open_in_editor ~/.config/omarchy/current/theme/hyprlock.conf ;;
   *Hyprsunset*) open_in_editor ~/.local/bin/hyprsunset_daynight.sh && omarchy-restart-hyprsunset ;;
   *Autostart*) open_in_editor ~/.config/hypr/autostart.lua ;;
   *Bindings*) open_in_editor ~/.config/hypr/bindings.lua;;
@@ -172,7 +163,7 @@ go_to_menu() {
   *toggle*) show_toggle_menu ;;
   *style*) show_style_menu ;;
   *config*) show_setup_config_menu ;;
-  *update*) omarchy-launch-or-focus -f -d -t "Update" "Update" "paru -Syu";; #ojo con esto
+  *update*) omarchy-launch-or-focus -f -d -t "Update" "paru -Syu";; #ojo con esto
   *about*) show_about ;;
   *system*) show_system_menu ;;
   esac
