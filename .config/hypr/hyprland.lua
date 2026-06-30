@@ -34,28 +34,49 @@ hl.env("OMARCHY_SCREENSHOT_DIR", "/home/cloca/Imágenes/Screenshots")
 hl.env("OMARCHY_SCREENRECORD_DIR", "/home/cloca/ssd/Videos/Screenrecording")
 
 -- ds 
-hl.window_rule({ match = {class = "discord"}, opacity = "1 0.93"})
-hl.window_rule({match = {class = "discord"}, monitor = "DP-3" })
+hl.window_rule({
+  match = {class = "discord"}, 
+  opacity = "1 0.99",
+  monitor = "DP-3"
+})
 
 --firefox
-hl.window_rule({match = {class = "firefox"}, opacity = "1 0.95"})
+hl.window_rule({
+  match = {class = "firefox"}, 
+  opacity = "1 0.98"
+})
 
 --spotify
-hl.window_rule({match = {class = "Spotify"}, monitor = "DP-3" })
+hl.window_rule({
+  match = {class = "Spotify"}, 
+  opacity = "1 0.99",
+  monitor = "DP-3" 
+})
 
 -- juegos de steam abren a la izquierda
-hl.window_rule({match = {class = "^steam_app_.*"}, monitor = "DP-1" })
-
--- nvtop abre flotando
-hl.window_rule({match = {class = "org.omarchy.nvtop"}, float = true })
+hl.window_rule(
+  {match = {class = "^steam_app_.*"}, 
+  monitor = "DP-1" 
+})
 
 -- nautilus 
-hl.window_rule({match = {class = "org.gnome.Nautilus"}, float = true })
-hl.window_rule({match = {class = "org.gnome.Nautilus"}, pin = true}) 
-
+hl.window_rule({
+  match = {class = "org.gnome.Nautilus"},
+  opacity = "1 0.98", 
+  float = true,
+  pin = true
+})
+ 
 -- terminal flotante (apps/system.lua)
-hl.window_rule({match = {tag = "floating-window*"}, size = {900, 600}})
-hl.window_rule({match = {tag = "floating-window*"}, pin = true})
+hl.window_rule({
+  match = {tag = "floating-window*"}, 
+  size = {900, 600},
+  pin = true
+})
 
-hl.window_rule({match = {initial_title = "Terminal"}, tag = '-floating-window*'})
-hl.window_rule({match = {initial_title = "Terminal"}, size = {1100, 800}})
+hl.window_rule({
+  match = {initial_title = "Terminal"}, 
+  tag = '-floating-window*',
+  size = {1100, 800}
+})
+
