@@ -28,9 +28,9 @@ Omarchy's structure is included directly in this repo — no need to install it 
 ## Dependencies
 
 Package lists live in [`dependencies`](./dependencies), separate from the installer
-logic in `install`. If a specific package hangs the install (bad mirror, AUR package
+logic in `install-all`. If a specific package hangs the install (bad mirror, AUR package
 that won't compile, flaky connection, etc), open `dependencies`, comment out that one
-line with `#`, and re-run `./install` — everything else installs normally. Once you've
+line with `#`, and re-run `./install-all` — everything else installs normally. Once you've
 sorted out whatever was blocking it, install that package by hand
 (`sudo pacman -S <pkg>` or `paru -S <pkg>`) and uncomment the line for next time.
 
@@ -67,7 +67,7 @@ Without walker the launcher won't work. You can either:
 
 ### Option A — one-shot (recommended for a fresh install)
 
-`install` chains everything below (paru → dotfiles → drivers → system
+`install-all` chains everything below (paru → dotfiles → drivers → system
 bootstrap) in the right order, and is safe to re-run if something fails partway
 through — every step checks what's already done before touching anything.
 
@@ -134,17 +134,21 @@ chmod +x bootstrap-system
 You may reconfigure hyprland for your monitors, go to `.config/hypr/monitors.lua` and change that.
 
 Some Waybar scripts read sensor paths that vary by hardware.
-At the moment the only waybar theme modified like this is `sakura-mochi`. You can change
+At the moment the only waybar theme modified like this is `event-horizon`. You can change
 the active modules if you want — `custom/gpu` and `custom/cpu-watts` are the ones that use
 these scripts.
 
-`waybar-cpu-watts`:
+The waybar themes path is `.config/waybar/themes`.
+
+These two are ones that reads paths hardcoded go and modify it or change the waybar theme:
+
+`.local/bin/waybar-cpu-watts`:
 ```
 /sys/class/hwmon/hwmon3/energy9_input   → CPU energy
 /sys/class/hwmon/hwmon4/temp1_input     → CPU temperature
 ```
 
-`waybar-gpu`:
+`.local/bin/waybar-gpu`:
 ```
 /sys/class/hwmon/hwmon2/power1_average  → GPU power draw
 ```
