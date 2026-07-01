@@ -169,16 +169,16 @@ setup_path() {
     local shell_rc=""
     if [[ "$SHELL" == *"fish"* ]]; then
         shell_rc="$HOME/.config/fish/config.fish"
-        local path_line="fish_add_path \$HOME/.local/share/omarchy/bin"
+        local path_line="fish_add_path \$HOME/.local/bin"
     elif [[ "$SHELL" == *"zsh"* ]]; then
         shell_rc="$HOME/.zshrc"
-        local path_line='export PATH="$HOME/.local/share/omarchy/bin:$PATH"'
+        local path_line='export PATH="$HOME/.local/bin:$PATH"'
     else
         shell_rc="$HOME/.bashrc"
-        local path_line='export PATH="$HOME/.local/share/omarchy/bin:$PATH"'
+        local path_line='export PATH="$HOME/.local/bin:$PATH"'
     fi
 
-    if grep -q "omarchy/bin" "$shell_rc" 2>/dev/null; then
+    if grep -q "\.local/bin" "$shell_rc" 2>/dev/null; then
         info "PATH ya configurado en $shell_rc"
     else
         echo "$path_line" >> "$shell_rc"

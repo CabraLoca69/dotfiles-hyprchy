@@ -2,7 +2,7 @@
 hl.config({
   input = {
     -- Use multiple keyboard layouts and switch between them with Left Alt + Right Alt.
-    kb_layout = "es",
+    kb_layout = "es", --"latam",
 
     -- Use a specific keyboard variant if needed (e.g. intl for international keyboards).
     -- kb_variant = "intl",

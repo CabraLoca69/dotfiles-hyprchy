@@ -22,6 +22,71 @@ ask_yes_no() {
     [[ "$answer" =~ ^[sSyY]$ ]]
 }
 
+install_pkgs() {
+    # $1 = "pacman" o "aur", resto = paquetes
+    local mgr="$1"; shift
+    local pkgs=("$@")
+    local missing=()
+
+    for pkg in "${pkgs[@]}"; do
+        if ! pacman -Qi "$pkg" &>/dev/null; then
+            missing+=("$pkg")
+        fi
+    done
+
+    if [ ${#missing[@]} -eq 0 ]; then
+        info "Ya instalados: ${pkgs[*]}"
+        return
+    fi
+
+    info "Instalando: ${missing[*]}"
+    if [ "$mgr" = "pacman" ]; then
+        sudo pacman -S --needed "${missing[@]}"
+    else
+        if ! command -v paru &>/dev/null; then
+            error "paru no encontrado, no puedo instalar paquetes AUR: ${missing[*]}"
+            return
+        fi
+        paru -S --needed "${missing[@]}"
+    fi
+}
+
+# ──────────────────────────────────────────────
+# Display Manager
+# ──────────────────────────────────────────────
+
+setup_display_manager() {
+    section "Display Manager"
+
+    # ¿Ya hay uno instalado y habilitado?
+    if systemctl is-enabled sddm.service &>/dev/null \
+        || systemctl is-enabled gdm.service &>/dev/null \
+        || systemctl is-enabled lightdm.service &>/dev/null \
+        || systemctl is-enabled greetd.service &>/dev/null; then
+        info "Ya hay un display manager habilitado ($(systemctl list-unit-files --state=enabled | grep -Eo 'sddm|gdm|lightdm|greetd' | head -1).service)."
+        return
+    fi
+
+    warning "No se detectó ningún display manager habilitado."
+    warning "Sin esto, al bootear vas a caer en el TTY y hay que lanzar Hyprland a mano."
+
+    if ! pacman -Qi sddm &>/dev/null; then
+        install_pkgs pacman sddm
+    else
+        info "sddm ya está instalado, falta habilitarlo."
+    fi
+
+    sudo systemctl enable sddm.service
+    info "sddm habilitado. Con el próximo reinicio deberías ver la pantalla de login."
+
+    # Verificamos que exista al menos una sesión Wayland para que sddm tenga qué mostrar
+    if ! ls /usr/share/wayland-sessions/*.desktop &>/dev/null \
+        && ! ls /usr/local/share/wayland-sessions/*.desktop &>/dev/null; then
+        warning "No encontré ningún .desktop en wayland-sessions."
+        MANUAL_NOTES+=("SDDM no encontró sesiones Wayland (/usr/share/wayland-sessions/). Verificá que uwsm/hyprland hayan generado un archivo .desktop de sesión, o creá uno manualmente.")
+    fi
+}
+
 # ──────────────────────────────────────────────
 # multilib
 # ──────────────────────────────────────────────
@@ -197,6 +262,7 @@ main() {
     echo "  └─────────────────────────────┘"
     echo -e "${NC}"
 
+    setup_display_manager
     enable_multilib
     enable_core_services
     add_user_groups
