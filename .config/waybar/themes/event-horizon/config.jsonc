@@ -148,6 +148,7 @@
       "^.*Bluetooth( .*|$)": "  Bluetooth $1 ",
       "^.*Audio( .*|$)": "   Audio $1 ",
       "^.*Network( .*|$)": " 󰀂  Network $1 ",
+      "^.*Calendar( .*|$)": "   Calendar $1 ",
       "^.*cmatrix( .*|$)": " 󰘨 MATRIX $1 ", 
       "(.*) - Spotify": "  $1 ",
       "(.*) - com.mitchellh.ghostty": " 󰊠 $1 ",
@@ -195,7 +196,7 @@
         "today": "<span color='#ff6699'><b>{}</b></span>"
       }
     },
-    "on-click-right": "omarchy-launch-floating-terminal-with-presentation omarchy-tz-select"
+    "on-click-right": "omarchy-launch-or-focus -f -t 'Calendar' 'calcurse'"
   },
 
   "network": {

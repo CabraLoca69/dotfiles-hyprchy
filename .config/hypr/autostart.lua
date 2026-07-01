@@ -3,11 +3,8 @@ o.launch_on_start("mako")
 o.exec_on_start("! omarchy-toggle-enabled waybar-off && " .. o.launch("waybar"))
 o.exec_on_start("setsid systemd-inhibit --what=handle-power-key --why='Omarchy power menu' sleep infinity &")
 o.launch_on_start("fcitx5 --disable notificationitem")
---o.launch_on_start("swaybg -i ~/.config/omarchy/current/background -m fill")
+--o.launch_on_start("swaybg -i ~/.config/omarchy/current/background -m fill") -- fondos normales, reactivar en caso de ser necesario
 o.exec_on_start("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
-o.exec_on_start("omarchy-first-run")
-o.exec_on_start("omarchy-powerprofiles-init")
---o.exec_on_start("restart-portals")
 o.launch_on_start("omarchy-hyprland-monitor-watch")
 
 

@@ -38,6 +38,7 @@ PACMAN_DEPS=(
     pamixer
     wireplumber
     wl-clipboard
+    calcurse
 
     # Terminal y shell
     alacritty

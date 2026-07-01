@@ -1,0 +1,333 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Colores
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+info()    { echo -e "${GREEN}[+]${NC} $1"; }
+warning() { echo -e "${YELLOW}[!]${NC} $1"; }
+error()   { echo -e "${RED}[x]${NC} $1"; }
+section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
+
+NEEDS_MKINITCPIO=false
+NEEDS_BOOTLOADER_UPDATE=false
+MANUAL_NOTES=()
+
+# ──────────────────────────────────────────────
+# Helpers
+# ──────────────────────────────────────────────
+
+is_multilib_enabled() {
+    grep -q "^\[multilib\]" /etc/pacman.conf 2>/dev/null
+}
+
+install_pkgs() {
+    # $1 = "pacman" o "aur", resto = paquetes
+    local mgr="$1"; shift
+    local pkgs=("$@")
+    local missing=()
+
+    for pkg in "${pkgs[@]}"; do
+        if ! pacman -Qi "$pkg" &>/dev/null; then
+            missing+=("$pkg")
+        fi
+    done
+
+    if [ ${#missing[@]} -eq 0 ]; then
+        info "Ya instalados: ${pkgs[*]}"
+        return
+    fi
+
+    info "Instalando: ${missing[*]}"
+    if [ "$mgr" = "pacman" ]; then
+        sudo pacman -S --needed "${missing[@]}"
+    else
+        if ! command -v paru &>/dev/null; then
+            error "paru no encontrado, no puedo instalar paquetes AUR: ${missing[*]}"
+            return
+        fi
+        paru -S --needed "${missing[@]}"
+    fi
+}
+
+ask_yes_no() {
+    # $1 = pregunta, devuelve 0 si sí
+    local answer
+    read -rp "$(echo -e "${YELLOW}?${NC} $1 [s/N]: ")" answer
+    [[ "$answer" =~ ^[sSyY]$ ]]
+}
+
+# ──────────────────────────────────────────────
+# Detección
+# ──────────────────────────────────────────────
+
+detect_cpu() {
+    if grep -q "AuthenticAMD" /proc/cpuinfo; then
+        echo "amd"
+    elif grep -q "GenuineIntel" /proc/cpuinfo; then
+        echo "intel"
+    else
+        echo "unknown"
+    fi
+}
+
+detect_gpus() {
+    # Puede haber más de una (ej: notebook Intel + NVIDIA)
+    local gpus=()
+    while IFS= read -r line; do
+        if echo "$line" | grep -qi "NVIDIA"; then
+            gpus+=("nvidia")
+        elif echo "$line" | grep -qi "AMD\|ATI\|Advanced Micro Devices"; then
+            gpus+=("amd")
+        elif echo "$line" | grep -qi "Intel"; then
+            gpus+=("intel")
+        fi
+    done < <(lspci -nnk | grep -Ei "VGA|3D controller|Display controller")
+
+    printf "%s\n" "${gpus[@]}" | sort -u
+}
+
+detect_bootloader() {
+    if [ -d /boot/loader/entries ]; then
+        echo "systemd-boot"
+    elif command -v grub-mkconfig &>/dev/null && [ -f /etc/default/grub ]; then
+        echo "grub"
+    elif [ -f /boot/limine.conf ] || [ -f /boot/limine.cfg ]; then
+        echo "limine"
+    else
+        echo "unknown"
+    fi
+}
+
+# ──────────────────────────────────────────────
+# CPU / microcode
+# ──────────────────────────────────────────────
+
+install_cpu_microcode() {
+    local cpu="$1"
+    section "Microcode de CPU ($cpu)"
+
+    case "$cpu" in
+        amd)
+            install_pkgs pacman amd-ucode
+            ;;
+        intel)
+            install_pkgs pacman intel-ucode
+            ;;
+        *)
+            warning "CPU no reconocida, salteando microcode."
+            return
+            ;;
+    esac
+
+    NEEDS_MKINITCPIO=true
+    NEEDS_BOOTLOADER_UPDATE=true
+}
+
+# ──────────────────────────────────────────────
+# GPU: AMD
+# ──────────────────────────────────────────────
+
+install_amd_gpu() {
+    section "Drivers AMD (mesa/vulkan)"
+
+    # Importante: 64 y 32 bits se instalan en UNA sola transacción de pacman.
+    # Si se hacen por separado, pacman puede negarse a reemplazar paquetes
+    # conflictivos (ej: mesa-git) porque rompería la dependencia del
+    # paquete lib32 correspondiente, que todavía no se está actualizando.
+    local pkgs=(mesa vulkan-radeon libva-mesa-driver mesa-vdpau vulkan-icd-loader)
+
+    if is_multilib_enabled; then
+        pkgs+=(lib32-mesa lib32-vulkan-radeon lib32-vulkan-icd-loader)
+    else
+        warning "[multilib] no está habilitado en /etc/pacman.conf."
+        warning "Sin eso no se instalan libs de 32 bits (necesarias para Steam/Proton)."
+        MANUAL_NOTES+=("Habilitá [multilib] en /etc/pacman.conf si vas a usar Steam/Wine, y volvé a correr este script.")
+    fi
+
+    install_pkgs pacman "${pkgs[@]}"
+}
+
+# ──────────────────────────────────────────────
+# GPU: Intel
+# ──────────────────────────────────────────────
+
+install_intel_gpu() {
+    section "Drivers Intel (mesa/vulkan)"
+
+    local pkgs=(mesa vulkan-intel libva-intel-driver intel-media-driver vulkan-icd-loader)
+
+    if is_multilib_enabled; then
+        pkgs+=(lib32-mesa lib32-vulkan-intel lib32-vulkan-icd-loader)
+    else
+        warning "[multilib] no está habilitado en /etc/pacman.conf."
+        MANUAL_NOTES+=("Habilitá [multilib] en /etc/pacman.conf si vas a usar Steam/Wine, y volvé a correr este script.")
+    fi
+
+    install_pkgs pacman "${pkgs[@]}"
+}
+
+# ──────────────────────────────────────────────
+# GPU: NVIDIA
+# ──────────────────────────────────────────────
+
+install_nvidia_gpu() {
+    section "Drivers NVIDIA"
+
+    local variant="nvidia-dkms"
+    if ask_yes_no "¿Tu GPU es Turing (RTX 20xx) o más nueva? (permite usar el módulo open-source nvidia-open-dkms)"; then
+        variant="nvidia-open-dkms"
+    fi
+
+    local pkgs=("$variant" nvidia-utils egl-wayland libva-nvidia-driver)
+
+    if is_multilib_enabled; then
+        pkgs+=(lib32-nvidia-utils)
+    else
+        warning "[multilib] no está habilitado, salteando lib32-nvidia-utils."
+        MANUAL_NOTES+=("Habilitá [multilib] en /etc/pacman.conf si vas a usar Steam/Wine, y volvé a correr este script.")
+    fi
+
+    install_pkgs pacman "${pkgs[@]}"
+
+    NEEDS_MKINITCPIO=true
+    NEEDS_BOOTLOADER_UPDATE=true
+
+    MANUAL_NOTES+=("NVIDIA + Hyprland (Wayland) necesita variables de entorno. Agregá esto a tu hyprland.conf (o env.conf) si no está ya:
+    env = LIBVA_DRIVER_NAME,nvidia
+    env = __GLX_VENDOR_LIBRARY_NAME,nvidia
+    env = NVD_BACKEND,direct
+    env = GBM_BACKEND,nvidia-drm")
+
+    MANUAL_NOTES+=("Agregá 'nvidia_drm.modeset=1 nvidia_drm.fbdev=1' a los parámetros del kernel (cmdline) y regenerá el initramfs/bootloader.")
+
+    if [ "$variant" = "nvidia-dkms" ]; then
+        MANUAL_NOTES+=("Instalaste el módulo dkms: asegurate de tener 'linux-headers' (o el headers del kernel que uses) instalado.")
+        install_pkgs pacman linux-headers
+    fi
+}
+
+install_nvidia_prime_hybrid() {
+    # Cuando hay NVIDIA + Intel/AMD en el mismo equipo (notebook)
+    section "Setup híbrido (NVIDIA + iGPU)"
+    install_pkgs pacman nvidia-prime
+    MANUAL_NOTES+=("Detecté setup híbrido. Para lanzar apps con la NVIDIA usá 'prime-run <programa>' (viene con nvidia-prime).")
+    MANUAL_NOTES+=("Si Hyprland arranca en la GPU integrada y querés forzar NVIDIA como render principal, revisá la env 'AQ_DRM_DEVICES' en hyprland.conf.")
+}
+
+# ──────────────────────────────────────────────
+# Post-instalación
+# ──────────────────────────────────────────────
+
+run_mkinitcpio() {
+    section "Regenerando initramfs"
+    if command -v mkinitcpio &>/dev/null; then
+        sudo mkinitcpio -P
+        info "initramfs regenerado."
+    else
+        warning "mkinitcpio no encontrado, regenerá el initramfs manualmente según tu setup."
+    fi
+}
+
+update_bootloader() {
+    local bl
+    bl="$(detect_bootloader)"
+    section "Bootloader detectado: $bl"
+
+    case "$bl" in
+        grub)
+            sudo grub-mkconfig -o /boot/grub/grub.cfg
+            info "grub.cfg regenerado."
+            ;;
+        systemd-boot)
+            info "systemd-boot no necesita regenerar config, pero revisá los kernel params en /boot/loader/entries/*.conf"
+            ;;
+        limine)
+            warning "Limine detectado. Revisá manualmente /boot/limine.conf (o el que uses) para agregar kernel params."
+            ;;
+        *)
+            warning "No pude detectar el bootloader. Actualizalo manualmente."
+            ;;
+    esac
+}
+
+print_manual_notes() {
+    if [ ${#MANUAL_NOTES[@]} -eq 0 ]; then
+        return
+    fi
+    section "Pasos manuales pendientes"
+    local i=1
+    for note in "${MANUAL_NOTES[@]}"; do
+        echo -e "${YELLOW}$i.${NC} $note"
+        echo ""
+        i=$((i+1))
+    done
+}
+
+# ──────────────────────────────────────────────
+# Main
+# ──────────────────────────────────────────────
+
+main() {
+    echo -e "${CYAN}"
+    echo "  ┌─────────────────────────────┐"
+    echo "  │    driver installer         │"
+    echo "  └─────────────────────────────┘"
+    echo -e "${NC}"
+
+    if ! command -v lspci &>/dev/null; then
+        error "lspci no encontrado. Instalá pciutils primero: sudo pacman -S pciutils"
+        exit 1
+    fi
+
+    local cpu
+    cpu="$(detect_cpu)"
+    info "CPU detectada: $cpu"
+
+    local gpus
+    mapfile -t gpus < <(detect_gpus)
+
+    if [ ${#gpus[@]} -eq 0 ]; then
+        warning "No se detectó ninguna GPU vía lspci. Salteando instalación de drivers de GPU."
+    else
+        info "GPU(s) detectada(s): ${gpus[*]}"
+    fi
+
+    install_cpu_microcode "$cpu"
+
+    local has_nvidia=false
+    local has_other=false
+
+    for gpu in "${gpus[@]}"; do
+        case "$gpu" in
+            amd)    install_amd_gpu ;;
+            intel)  install_intel_gpu ;;
+            nvidia) install_nvidia_gpu; has_nvidia=true ;;
+        esac
+        [ "$gpu" != "nvidia" ] && has_other=true
+    done
+
+    if [ "$has_nvidia" = true ] && [ "$has_other" = true ]; then
+        install_nvidia_prime_hybrid
+    fi
+
+    if [ "$NEEDS_MKINITCPIO" = true ]; then
+        run_mkinitcpio
+    fi
+
+    if [ "$NEEDS_BOOTLOADER_UPDATE" = true ]; then
+        update_bootloader
+    fi
+
+    print_manual_notes
+
+    echo ""
+    info "Instalación de drivers completa. Se recomienda reiniciar."
+}
+
+main "$@"
