@@ -140,7 +140,7 @@ install_amd_gpu() {
     # Si se hacen por separado, pacman puede negarse a reemplazar paquetes
     # conflictivos (ej: mesa-git) porque rompería la dependencia del
     # paquete lib32 correspondiente, que todavía no se está actualizando.
-    local pkgs=(mesa vulkan-radeon libva-mesa-driver mesa-vdpau vulkan-icd-loader)
+    local pkgs=(mesa vulkan-radeon libva-mesa-driver vulkan-icd-loader)
 
     if is_multilib_enabled; then
         pkgs+=(lib32-mesa lib32-vulkan-radeon lib32-vulkan-icd-loader)

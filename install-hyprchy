@@ -17,79 +17,20 @@ error()   { echo -e "${RED}[x]${NC} $1"; }
 section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 
 # ──────────────────────────────────────────────
-# Dependencias
+# Dependencias (definidas en dependencies, al lado de este script)
 # ──────────────────────────────────────────────
+ 
+DEPENDENCIES_FILE="$DOTFILES_DIR/dependencies"
+ 
+if [ ! -f "$DEPENDENCIES_FILE" ]; then
+    error "No encuentro $DEPENDENCIES_FILE"
+    error "Ese archivo tiene las listas PACMAN_DEPS / AUR_DEPS / CACHYOS_DEPS."
+    exit 1
+fi
+ 
+# shellcheck source=dependencies
+source "$DEPENDENCIES_FILE"
 
-PACMAN_DEPS=(
-    # Hyprland y compositor
-    hyprland
-    hyprlock
-    hypridle
-    hyprsunset
-    hyprpicker
-    xdg-desktop-portal-hyprland
-    xdg-desktop-portal-gtk
-    uwsm
-
-    # Waybar y notificaciones
-    waybar
-    mako
-    playerctl
-    pamixer
-    wireplumber
-    wl-clipboard
-    calcurse
-
-    # Terminal y shell
-    alacritty
-    fzf
-    jq
-    bat
-    eza
-    starship
-    zoxide
-
-    # Archivos y sistema
-    nautilus
-    gvfs-mtp
-    grim
-    slurp
-    swaybg
-    polkit-gnome
-    gnome-keyring
-    gnome-keyring
-    libsecret
-
-    # Fuentes
-    noto-fonts
-    noto-fonts-emoji
-    ttf-jetbrains-mono-nerd
-)
-
-AUR_DEPS=(
-    elephant
-    elephant-bluetooth
-    elephant-calc
-    elephant-clipboard
-    elephant-desktopapplications
-    elephant-files
-    elephant-menus
-    elephant-providerlist
-    elephant-runner
-    elephant-symbols
-    elephant-todo
-    elephant-unicode
-    elephant-websearch
-    xdg-terminal-exec
-    yaru-icon-theme
-    linux-wallpaperengine-git
-    sunwait
-    hyprland-preview-share-picker-git
-)
-
-CACHYOS_DEPS=(
-    walker
-)
 
 install_pacman_deps() {
     section "Instalando dependencias (pacman)"
@@ -111,26 +52,32 @@ install_pacman_deps() {
 
 install_aur_deps() {
     section "Instalando dependencias (AUR)"
-
+ 
     if ! command -v paru &>/dev/null; then
         error "paru no encontrado. Instalalo primero: https://github.com/Morganamilo/paru"
         exit 1
     fi
-
+ 
     local missing=()
     for pkg in "${AUR_DEPS[@]}"; do
         if ! pacman -Qi "$pkg" &>/dev/null; then
             missing+=("$pkg")
         fi
     done
-
+ 
     if [ ${#missing[@]} -eq 0 ]; then
         info "Todas las dependencias AUR ya están instaladas."
     else
         info "Paquetes AUR a instalar: ${missing[*]}"
-        paru -S --needed "${missing[@]}"
+        warning "Si alguno de estos cuelga la instalación (conexión, falla al compilar, etc),"
+        warning "comentalo con # en dependencies.sh, volvé a correr ./install.sh, e instalalo"
+        warning "después a mano con: paru -S <paquete>"
+        # (asumimos que confiás en los paquetes de esta lista; si querés revisar
+        # alguno antes de instalarlo, sacale --skipreview a mano por esta vez)
+        paru -S --needed --noconfirm --skipreview "${missing[@]}"
     fi
 }
+
 
 install_cachyos_deps() {
     section "Instalando dependencias (CachyOS)"

@@ -1,0 +1,78 @@
+# Listas de paquetes que instala install.sh. Separado en su propio archivo
+# para poder comentar una línea puntual sin tocar la lógica del instalador,
+# por si algún paquete cuelga la instalación (conexión, mirror caído, el
+# paquete AUR no compila, etc).
+#
+# Para saltear un paquete: comentalo con # y volvé a correr ./install.sh.
+# Podés instalarlo después a mano (sudo pacman -S <paquete> o paru -S <paquete>)
+# una vez que resuelvas lo que lo estaba colgando.
+
+PACMAN_DEPS=(
+    # Hyprland y compositor
+    hyprland
+    hyprlock
+    hypridle
+    hyprsunset
+    hyprpicker
+    xdg-desktop-portal-hyprland
+    xdg-desktop-portal-gtk
+    uwsm
+
+    # Waybar y notificaciones
+    waybar
+    mako
+    playerctl
+    pamixer
+    wireplumber
+    wl-clipboard
+    calcurse
+
+    # Terminal y shell
+    alacritty
+    fzf
+    jq
+    bat
+    eza
+    starship
+    zoxide
+
+    # Archivos y sistema
+    nautilus
+    gvfs-mtp
+    grim
+    slurp
+    swaybg
+    polkit-gnome
+    gnome-keyring
+    libsecret
+
+    # Fuentes
+    noto-fonts
+    noto-fonts-emoji
+    ttf-jetbrains-mono-nerd
+)
+
+AUR_DEPS=(
+    elephant
+    elephant-bluetooth
+    elephant-calc
+    elephant-clipboard
+    elephant-desktopapplications
+    elephant-files
+    elephant-menus
+    elephant-providerlist
+    elephant-runner
+    elephant-symbols
+    elephant-todo
+    elephant-unicode
+    elephant-websearch
+    xdg-terminal-exec
+    yaru-icon-theme
+    linux-wallpaperengine-git
+    sunwait
+    hyprland-preview-share-picker-git
+)
+
+CACHYOS_DEPS=(
+    walker
+)

@@ -21,24 +21,35 @@ Omarchy's structure is included directly in this repo — no need to install it 
 - Waybar with custom scripts (CPU watts, GPU usage, wallpaper picker)
 - Omarchy's bin, themes, and default apps — modified and self-contained
 - Scripts for floating terminals, wallpaper management, and more
+- Helper scripts for GPU/CPU drivers and system bootstrap (multilib, services, display manager)
 
 ---
 
 ## Dependencies
 
+Package lists live in [`dependencies`](./dependencies), separate from the installer
+logic in `install`. If a specific package hangs the install (bad mirror, AUR package
+that won't compile, flaky connection, etc), open `dependencies`, comment out that one
+line with `#`, and re-run `./install` — everything else installs normally. Once you've
+sorted out whatever was blocking it, install that package by hand
+(`sudo pacman -S <pkg>` or `paru -S <pkg>`) and uncomment the line for next time.
+
 ### Base (pacman)
+
 Hyprland, Waybar, Alacritty, Nautilus, fonts, and other core packages.
 The installer handles these automatically.
 
 ### AUR (requires [paru](https://github.com/Morganamilo/paru))
+
 - `elephant` + modules — app launcher data sources
 - `xdg-terminal-exec` — default terminal handler
 - `yaru-icon-theme` — icon theme
 - `linux-wallpaperengine-git` — Wallpaper Engine on Linux
-- `sunwait` — sunrise/sunset for `hyprsunset_daynight.sh`
+- `sunwait` — sunrise/sunset for `hyprsunset_daynight`
 - `hyprland-preview-share-picker-git` — screen share preview
 
 ### CachyOS repo (optional but recommended)
+
 - `walker` — application launcher (menus, app switcher)
 
 Without walker the launcher won't work. You can either:
@@ -46,17 +57,39 @@ Without walker the launcher won't work. You can either:
 - Or install from AUR: `paru -S walker-bin`
 
 ### Manual / hardware-specific
-- **ROCm** (`rocm-smi`) — for `waybar-gpu.sh`, AMD GPU only
+
+- **ROCm** (`rocm-smi`) — for `waybar-gpu`, AMD GPU only
 - **Wallpaper Engine** — must be purchased and installed via Steam
 
 ---
 
 ## Installation
 
+### Option A — one-shot (recommended for a fresh install)
+
+`install` chains everything below (paru → dotfiles → drivers → system
+bootstrap) in the right order, and is safe to re-run if something fails partway
+through — every step checks what's already done before touching anything.
+
+```bash
+git clone https://github.com/CabraLoca69/dotfiles-hyprchy.git
+cd dotfiles-hyprchy
+chmod +x install-all
+./install-all
+```
+
+Do **not** run it with `sudo` — it asks for your password internally where needed.
+Compiling `paru` requires a regular user, not root.
+
+At the end it'll suggest a reboot. Do it, or log out and back in, to land on Hyprland
+via the display manager it set up.
+
+### Option B — step by step
+
 <details>
 <summary>Starting from a fresh CachyOS install (no DE)?</summary>
 
-Make sure you have the basics before running the installer:
+Make sure you have `paru` before running the installer:
 
 ```bash
 sudo pacman -S --needed git base-devel
@@ -68,33 +101,56 @@ cd ~
 </details>
 
 1. Clone and run the installer:
+
 ```bash
 git clone https://github.com/CabraLoca69/dotfiles-hyprchy.git
 cd dotfiles-hyprchy
-chmod +x install.sh
-./install.sh
+chmod +x install-hyprchy
+./install-hyprchy
 ```
 
-2. Reboot or log out and back in to start Hyprland.
+2. (Optional but recommended) Install CPU/GPU drivers:
+
+```bash
+chmod +x install-drivers
+./install-drivers
+```
+
+3. (Optional but recommended) Run the system bootstrap — enables `[multilib]`,
+   `NetworkManager`, `bluetooth`, fixes `gnome-keyring` + PAM integration, and
+   installs/enables a display manager (`sddm`) if none is present:
+
+```bash
+chmod +x bootstrap-system
+./bootstrap-system
+```
+
+4. Reboot or log out and back in to start Hyprland.
 
 ---
 
 ## Hardware notes
 
-You may reconfigure hyprland for your monitors, go to .config/hypr/monitors.lua and change that
+You may reconfigure hyprland for your monitors, go to `.config/hypr/monitors.lua` and change that.
 
 Some Waybar scripts read sensor paths that vary by hardware.
-At the moment the only waybar modified like this is in the theme sakura-mochi, you can change the active modules if you want, custom/gpu and custom/cpu-watts are the ones that uses this scripts
+At the moment the only waybar theme modified like this is `sakura-mochi`. You can change
+the active modules if you want — `custom/gpu` and `custom/cpu-watts` are the ones that use
+these scripts.
 
 `waybar-cpu-watts`:
+```
 /sys/class/hwmon/hwmon3/energy9_input   → CPU energy
-
 /sys/class/hwmon/hwmon4/temp1_input     → CPU temperature
+```
 
 `waybar-gpu`:
+```
 /sys/class/hwmon/hwmon2/power1_average  → GPU power draw
+```
 
 To find the correct paths on your machine:
+
 ```bash
 ls /sys/class/hwmon/
 cat /sys/class/hwmon/hwmon*/name
@@ -107,7 +163,6 @@ cat /sys/class/hwmon/hwmon*/name
 - [Omarchy](https://github.com/basecamp/omarchy) by Basecamp/DHH — the base this is built on
 - [linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine) by Almamu
 - Themes and Waybar configs by [HANCORE-linux](https://github.com/HANCORE-linux) and [OldJobobo](https://github.com/OldJobobo)
-
 
 ---
 
