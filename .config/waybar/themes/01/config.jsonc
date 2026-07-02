@@ -98,7 +98,7 @@
         "today": "<span color='#ce67f0'><b>{}</b></span>",
       },
     },
-    "on-click-right": "omarchy-launch-floating-terminal-with-presentation omarchy-tz-select"
+    "on-click-right": "omarchy-launch-floating-terminal -d -f  omarchy-tz-select"
   },
   "custom/updatespacman": {
     "format": "{}{icon}",

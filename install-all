@@ -1,21 +1,24 @@
 #!/usr/bin/env bash
-#
-# install — corre toda la secuencia de instalación de punta a punta:
-#   0. paru (si no está, hace falta para install)
-#   1. install          (deps pacman/AUR, PATH, symlinks de dotfiles)
+# INSTALL-ALL
+# corre toda la secuencia de instalación de punta a punta:
+#   1. install-hyprchy  (paru, deps pacman/AUR/CachyOS, PATH, symlinks de dotfiles)
 #   2. install-drivers  (CPU/GPU)
 #   3. bootstrap-system (multilib, servicios, grupos, keyring, display manager)
 #
 # Se corre UNA vez en una instalación nueva. Es re-corrible sin problema:
 # cada script y cada paso ya es idempotente (chequea antes de instalar/tocar nada).
 #
+# paru YA NO se instala acá — install-hyprchy se encarga (usa el paru del repo
+# de CachyOS si está disponible, o lo compila de fuente si no). Instalarlo acá
+# antes duplicaba lógica y daba problemas de timing con el resto de los pasos.
+#
 # Uso:
 #   ./install-all
 #
-# Asume que install, install-drivers y bootstrap-system están
+# Asume que install-hyprchy, install-drivers y bootstrap-system están
 # en el mismo directorio que este script (es decir, en la raíz del repo
 # de dotfiles). Si no es así, pasalos por variable de entorno:
-#   INSTALL_SH=/otra/ruta/install ./install-all
+#   INSTALL_SH=/otra/ruta/install-hyprchy ./install-all
 
 set -e
 
@@ -38,7 +41,7 @@ BOOTSTRAP_SH="${BOOTSTRAP_SH:-$SCRIPT_DIR/bootstrap-system}"
 
 if [ "$EUID" -eq 0 ]; then
     error "No corras esto como root directamente (ni con sudo por delante)."
-    error "Los scripts internos ya usan sudo donde hace falta, y paru necesita"
+    error "Los scripts internos ya usan sudo donde hace falta, y paru/AUR necesitan"
     error "compilar como usuario normal. Corré: ./install-all"
     exit 1
 fi
@@ -53,56 +56,18 @@ for f in "$INSTALL_SH" "$DRIVERS_SH" "$BOOTSTRAP_SH"; do
 done
 
 # ──────────────────────────────────────────────
-# Paso 0: paru
-# ──────────────────────────────────────────────
-
-install_paru() {
-    section "Paso 0: paru"
-
-    if command -v paru &>/dev/null; then
-        info "paru ya está instalado."
-        return
-    fi
-
-    if ! pacman -Qi base-devel &>/dev/null; then
-        info "Instalando base-devel y git (necesarios para compilar paru)..."
-        sudo pacman -S --needed --noconfirm base-devel git
-    elif ! command -v git &>/dev/null; then
-        sudo pacman -S --needed --noconfirm git
-    fi
-
-    local build_dir
-    build_dir="$(mktemp -d)"
-    info "Compilando paru-bin en $build_dir ..."
-
-    git clone --depth=1 https://aur.archlinux.org/paru-bin.git "$build_dir/paru-bin"
-    (cd "$build_dir/paru-bin" && makepkg -si --noconfirm)
-
-    rm -rf "$build_dir"
-
-    if command -v paru &>/dev/null; then
-        info "paru instalado correctamente."
-    else
-        error "paru no quedó instalado. Revisá el output de arriba y reintentá a mano."
-        exit 1
-    fi
-}
-
-# ──────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────
 
 main() {
     echo -e "${CYAN}"
     echo "  ┌─────────────────────────────────────┐"
-    echo "  │   install: instalación total   │"
+    echo "  │   install-all: instalación total     │"
     echo "  └─────────────────────────────────────┘"
     echo -e "${NC}"
 
-    install_paru
-
-    section "Paso 1: dotfiles (deps + symlinks) — $INSTALL_SH"
-    "$INSTALL_SH"
+    section "Paso 1: dotfiles (paru + deps + symlinks) — $INSTALL_SH"
+    "$INSTALL_SH" "$@"
 
     section "Paso 2: drivers de CPU/GPU — $DRIVERS_SH"
     "$DRIVERS_SH"
@@ -111,7 +76,7 @@ main() {
     "$BOOTSTRAP_SH"
 
     section "Listo"
-    info "Los 4 pasos terminaron. Se recomienda reiniciar ahora:"
+    info "Los 3 pasos terminaron. Se recomienda reiniciar ahora:"
     echo "    sudo reboot"
 }
 

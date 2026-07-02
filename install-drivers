@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# INSTALL-DRIVERS
 
 set -e
 
@@ -18,12 +19,20 @@ NEEDS_MKINITCPIO=false
 NEEDS_BOOTLOADER_UPDATE=false
 MANUAL_NOTES=()
 
+PACMAN_CONF="/etc/pacman.conf"
+PACMAN_CONF_BAK="/etc/pacman.conf.bak-drivers"
+CACHYOS_REPO_DISABLED=false
+
 # ──────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────
 
 is_multilib_enabled() {
     grep -q "^\[multilib\]" /etc/pacman.conf 2>/dev/null
+}
+
+is_cachyos_repo_enabled() {
+    grep -q "^\[cachyos\]" "$PACMAN_CONF" 2>/dev/null
 }
 
 install_pkgs() {
@@ -60,6 +69,47 @@ ask_yes_no() {
     local answer
     read -rp "$(echo -e "${YELLOW}?${NC} $1 [s/N]: ")" answer
     [[ "$answer" =~ ^[sSyY]$ ]]
+}
+
+# ──────────────────────────────────────────────
+# Conflicto [cachyos] vs mesa estándar
+# ──────────────────────────────────────────────
+#
+# El repo [cachyos] trae mesa-git (y variantes -git de vulkan-*), que
+# conflictúa con los paquetes mesa/vulkan-* estándar que este script instala
+# según la GPU detectada. pacman se niega a instalar y aborta.
+#
+# En vez de pedirle al usuario que comente el repo a mano en pacman.conf
+# antes de correr esto (fácil de olvidar, fácil de dejar comentado para
+# siempre sin querer), lo deshabilitamos temporalmente con backup y lo
+# restauramos al final pase lo que pase (trap).
+
+disable_cachyos_repo_temporarily() {
+    if ! is_cachyos_repo_enabled; then
+        return
+    fi
+
+    warning "Repo [cachyos] detectado — trae mesa-git, que conflictúa con mesa estándar."
+    if ! ask_yes_no "¿Deshabilitarlo temporalmente durante la instalación de drivers de GPU? (se restaura solo al terminar)"; then
+        warning "Seguí sin deshabilitar. Si pacman tira conflicto de mesa-git, comentá"
+        warning "[cachyos] a mano en $PACMAN_CONF y volvé a correr este script."
+        return
+    fi
+
+    sudo cp "$PACMAN_CONF" "$PACMAN_CONF_BAK"
+    sudo sed -i '/^\[cachyos\]/,/^Include/s/^/#/' "$PACMAN_CONF"
+    sudo pacman -Sy
+    CACHYOS_REPO_DISABLED=true
+    info "[cachyos] deshabilitado temporalmente (backup en $PACMAN_CONF_BAK)."
+}
+
+restore_cachyos_repo() {
+    if [ "$CACHYOS_REPO_DISABLED" = true ] && [ -f "$PACMAN_CONF_BAK" ]; then
+        sudo cp "$PACMAN_CONF_BAK" "$PACMAN_CONF"
+        sudo rm -f "$PACMAN_CONF_BAK"
+        sudo pacman -Sy
+        info "[cachyos] restaurado."
+    fi
 }
 
 # ──────────────────────────────────────────────
@@ -280,6 +330,9 @@ main() {
     echo "  └─────────────────────────────┘"
     echo -e "${NC}"
 
+    # Pase lo que pase (error, Ctrl+C, etc), restaurar pacman.conf si lo tocamos.
+    trap restore_cachyos_repo EXIT
+
     if ! command -v lspci &>/dev/null; then
         error "lspci no encontrado. Instalá pciutils primero: sudo pacman -S pciutils"
         exit 1
@@ -296,6 +349,7 @@ main() {
         warning "No se detectó ninguna GPU vía lspci. Salteando instalación de drivers de GPU."
     else
         info "GPU(s) detectada(s): ${gpus[*]}"
+        disable_cachyos_repo_temporarily
     fi
 
     install_cpu_microcode "$cpu"

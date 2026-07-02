@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+#INSTAL-HYPRCHY
+#
+# Uso:
+#   ./install-hyprchy                # instalación normal
+#   ./install-hyprchy --atomic-bin   # además, symlinkea ~/.local/bin y
+#                                     # ~/.local/share/omarchy/bin enteros a
+#                                     # /usr/local/bin (red de seguridad para
+#                                     # cuando algo lanzado por uwsm-app no
+#                                     # encuentra un binario propio). Podés
+#                                     # re-correr el script solo con esta flag
+#                                     # en cualquier momento, es idempotente.
 
 set -e
 
@@ -16,21 +27,66 @@ warning() { echo -e "${YELLOW}[!]${NC} $1"; }
 error()   { echo -e "${RED}[x]${NC} $1"; }
 section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
 
+ask_yes_no() {
+    local answer
+    read -rp "$(echo -e "${YELLOW}?${NC} $1 [s/N]: ")" answer
+    [[ "$answer" =~ ^[sSyY]$ ]]
+}
+
+if [ "$EUID" -eq 0 ]; then
+    error "No corras esto como root/sudo directamente. makepkg (para compilar paru)"
+    error "se niega a correr como root. Corré: ./install-hyprchy"
+    exit 1
+fi
+
 # ──────────────────────────────────────────────
 # Dependencias (definidas en dependencies, al lado de este script)
 # ──────────────────────────────────────────────
- 
+
 DEPENDENCIES_FILE="$DOTFILES_DIR/dependencies"
- 
+
 if [ ! -f "$DEPENDENCIES_FILE" ]; then
     error "No encuentro $DEPENDENCIES_FILE"
     error "Ese archivo tiene las listas PACMAN_DEPS / AUR_DEPS / CACHYOS_DEPS."
     exit 1
 fi
- 
+
 # shellcheck source=dependencies
 source "$DEPENDENCIES_FILE"
 
+# ──────────────────────────────────────────────
+# paru
+# ──────────────────────────────────────────────
+
+install_paru() {
+    section "paru"
+
+    if command -v paru &>/dev/null; then
+        info "paru ya está instalado."
+        return
+    fi
+
+    if grep -q "^\[cachyos\]" /etc/pacman.conf 2>/dev/null; then
+        info "Repo [cachyos] detectado, instalando paru desde ahí."
+        sudo pacman -S --needed --noconfirm paru
+    else
+        warning "Repo [cachyos] no encontrado. Compilando paru desde fuente (AUR)..."
+        sudo pacman -S --needed --noconfirm base-devel git
+
+        local build_dir
+        build_dir="$(mktemp -d)"
+        git clone --depth=1 https://aur.archlinux.org/paru.git "$build_dir/paru"
+        (cd "$build_dir/paru" && makepkg -si --noconfirm)
+        rm -rf "$build_dir"
+    fi
+
+    if command -v paru &>/dev/null; then
+        info "paru instalado correctamente."
+    else
+        error "paru no quedó instalado. Revisá el output de arriba y reintentá a mano."
+        exit 1
+    fi
+}
 
 install_pacman_deps() {
     section "Instalando dependencias (pacman)"
@@ -52,32 +108,30 @@ install_pacman_deps() {
 
 install_aur_deps() {
     section "Instalando dependencias (AUR)"
- 
+
     if ! command -v paru &>/dev/null; then
-        error "paru no encontrado. Instalalo primero: https://github.com/Morganamilo/paru"
+        error "paru no encontrado. Algo falló en install_paru() más arriba."
         exit 1
     fi
- 
+
     local missing=()
     for pkg in "${AUR_DEPS[@]}"; do
         if ! pacman -Qi "$pkg" &>/dev/null; then
             missing+=("$pkg")
         fi
     done
- 
+
     if [ ${#missing[@]} -eq 0 ]; then
         info "Todas las dependencias AUR ya están instaladas."
     else
         info "Paquetes AUR a instalar: ${missing[*]}"
-        warning "Si alguno de estos cuelga la instalación (conexión, falla al compilar, etc),"
-        warning "comentalo con # en dependencies.sh, volvé a correr ./install.sh, e instalalo"
+        warning "Ojo: esto baja bastantes paquetes del AUR (repositorio de usuarios, no oficial)."
+        warning "Si alguno cuelga la instalación (conexión, falla al compilar, etc),"
+        warning "comentalo con # en dependencies, volvé a correr este script, e instalalo"
         warning "después a mano con: paru -S <paquete>"
-        # (asumimos que confiás en los paquetes de esta lista; si querés revisar
-        # alguno antes de instalarlo, sacale --skipreview a mano por esta vez)
         paru -S --needed --noconfirm --skipreview "${missing[@]}"
     fi
 }
-
 
 install_cachyos_deps() {
     section "Instalando dependencias (CachyOS)"
@@ -107,11 +161,18 @@ install_cachyos_deps() {
 }
 
 # ──────────────────────────────────────────────
-# PATH
+# PATH — dos mecanismos, cada uno cubre un contexto distinto:
+#   - shell rc: para shells interactivas (terminal local, SSH)
+#   - ~/.config/uwsm/env: para todo lo que arranca DENTRO de la sesión
+#     gráfica vía uwsm-app/systemd --user (waybar, binds, autostart). NO es
+#     redundante con lo de arriba — ~/.config/environment.d/ NO sirve para
+#     esto porque systemd tiene un bug/limitación conocida donde PATH
+#     específicamente se ignora ahí (ver systemd/systemd#12259). uwsm lee
+#     este archivo con su propio mecanismo, no el generador de systemd.
 # ──────────────────────────────────────────────
 
 setup_path() {
-    section "Configurando PATH"
+    section "Configurando PATH (shell interactiva)"
 
     local shell_rc=""
     if [[ "$SHELL" == *"fish"* ]]; then
@@ -134,6 +195,25 @@ setup_path() {
     fi
 }
 
+setup_uwsm_env() {
+    section "Configurando ~/.config/uwsm/env (PATH para la sesión gráfica)"
+
+    mkdir -p "$HOME/.config/uwsm"
+    local env_file="$HOME/.config/uwsm/env"
+
+    if grep -q "OMARCHY_PATH" "$env_file" 2>/dev/null; then
+        info "$env_file ya tiene OMARCHY_PATH configurado."
+    else
+        cat >> "$env_file" << 'EOF'
+export OMARCHY_PATH=$HOME/.local/share/omarchy
+export PATH="$HOME/.local/bin:$OMARCHY_PATH/bin:$PATH"
+EOF
+        info "$env_file actualizado."
+        warning "Esto solo lo lee uwsm al arrancar la sesión gráfica — hace falta"
+        warning "logout/login completo (no alcanza con hyprctl reload) para que tome efecto."
+    fi
+}
+
 # ──────────────────────────────────────────────
 # Symlinks
 # ──────────────────────────────────────────────
@@ -143,7 +223,6 @@ symlink() {
     local dst="$2"
 
     if [ -L "$dst" ]; then
-        warning "Ya existe symlink: $dst → reemplazando"
         rm "$dst"
     elif [ -e "$dst" ]; then
         warning "Ya existe (no es symlink): $dst → haciendo backup en ${dst}.bak"
@@ -156,7 +235,7 @@ symlink() {
 }
 
 create_symlinks() {
-    section "Creando symlinks"
+    section "Creando symlinks (config general)"
 
     for dir in "$DOTFILES_DIR"/.config/*/; do
         name="$(basename "$dir")"
@@ -172,6 +251,86 @@ create_symlinks() {
     for file in "$DOTFILES_DIR"/.local/bin/*; do
         name="$(basename "$file")"
         symlink "$file" "$HOME/.local/bin/$name"
+    done
+}
+
+# Unidades de systemd --user que vienen con el repo (ej: swayosd-server.service).
+# El symlink de ~/.local/share/omarchy de arriba las hace visibles DENTRO de
+# ese árbol, pero systemd --user busca en ~/.config/systemd/user/ — hace
+# falta este segundo symlink explícito, uno por unidad.
+symlink_systemd_units() {
+    section "Symlinks de unidades systemd --user"
+
+    local units_dir="$HOME/.local/share/omarchy/config/systemd/user"
+    if [ ! -d "$units_dir" ]; then
+        warning "No encontré $units_dir, salteando unidades systemd."
+        return
+    fi
+
+    mkdir -p "$HOME/.config/systemd/user"
+    local found=false
+    for unit in "$units_dir"/*; do
+        [ -e "$unit" ] || continue
+        found=true
+        name="$(basename "$unit")"
+        symlink "$unit" "$HOME/.config/systemd/user/$name"
+    done
+
+    if [ "$found" = true ]; then
+        systemctl --user daemon-reload
+        info "systemd --user recargado."
+    fi
+}
+
+# walker.desktop tiene que estar en ~/.config/autostart/ para que el
+# generador de systemd (xdg-desktop-autostart-generator) le arme la unidad
+# transitoria app-walker@autostart.service solo. Sin este symlink, walker
+# nunca termina de arrancar bien y omarchy-restart-walker falla.
+symlink_autostart_entries() {
+    section "Symlinks de autostart XDG"
+
+    local walker_desktop="$HOME/.local/share/omarchy/default/walker/walker.desktop"
+    if [ -f "$walker_desktop" ]; then
+        mkdir -p "$HOME/.config/autostart"
+        symlink "$walker_desktop" "$HOME/.config/autostart/walker.desktop"
+    else
+        warning "No encontré walker.desktop en el repo, salteando."
+    fi
+}
+
+# elephant (backend de walker) no se habilita symlinkeando un .service — trae
+# su propio subcomando que genera y habilita su unidad.
+enable_elephant() {
+    section "Habilitando elephant (backend de walker)"
+
+    if ! command -v elephant &>/dev/null; then
+        warning "elephant no está instalado, salteando."
+        return
+    fi
+
+    if systemctl --user is-enabled elephant.service &>/dev/null; then
+        info "elephant.service ya está habilitado."
+    else
+        elephant service enable
+        info "elephant.service habilitado."
+    fi
+}
+
+# Symlinks "atómicos" a /usr/local/bin — red de seguridad opcional. No
+# reemplaza a setup_uwsm_env (que es la forma correcta), pero cubre el caso
+# de emergencia donde algo lanzado por uwsm-app no encuentra un binario
+# propio y no da tiempo/ganas de averiguar por qué. Seleccionable con
+# --atomic-bin, re-corrible en cualquier momento.
+atomic_bin_symlinks() {
+    section "Symlinks atómicos a /usr/local/bin (red de seguridad)"
+
+    for dir in "$HOME/.local/bin" "$HOME/.local/share/omarchy/bin"; do
+        if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+            sudo ln -sf "$dir"/* /usr/local/bin/
+            info "Symlinkeado: $dir/* → /usr/local/bin/"
+        else
+            warning "$dir vacío o inexistente, salteando."
+        fi
     done
 }
 
@@ -196,9 +355,17 @@ post_install_notes() {
     echo ""
     echo "  3. linux-wallpaperengine requiere Wallpaper Engine instalado en Steam."
     echo "     Sin eso el script no funciona, pero no rompe nada al iniciar."
-    echo "     Puedes descomentar la 6ta linea del autostart para que se lanze swaybg"
-    echo "     Deberias instalar Swaybg si no lo tienes"
-    echo "     Aun asi de estas dotfiles se elimino el handler de fondos, buena suerte"
+    echo "     Podés descomentar la 6ta línea del autostart para que se lance swaybg."
+    echo "     Deberías instalar swaybg si no lo tenés."
+    echo "     Aun así, de estas dotfiles se eliminó el handler de fondos, buena suerte."
+    echo ""
+    if [[ " $* " != *" --atomic-bin "* ]]; then
+        echo "  4. Si algo lanzado por uwsm-app (binds, waybar, autostart) tira"
+        echo "     'command not found' para un binario en ~/.local/bin o"
+        echo "     ~/.local/share/omarchy/bin, corré:"
+        echo "         ./install-hyprchy --atomic-bin"
+        echo "     Symlinkea esos binarios también a /usr/local/bin como red de seguridad."
+    fi
 }
 
 # ──────────────────────────────────────────────
@@ -212,12 +379,22 @@ main() {
     echo "  └─────────────────────────────┘"
     echo -e "${NC}"
 
+    install_cachyos_deps
+    install_paru
     install_pacman_deps
     install_aur_deps
-    install_cachyos_deps
     setup_path
+    setup_uwsm_env
     create_symlinks
-    post_install_notes
+    symlink_systemd_units
+    symlink_autostart_entries
+    enable_elephant
+
+    if [[ " $* " == *" --atomic-bin "* ]]; then
+        atomic_bin_symlinks
+    fi
+
+    post_install_notes "$@"
 
     echo ""
     info "Instalación completa."

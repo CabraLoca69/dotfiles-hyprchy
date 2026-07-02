@@ -26,6 +26,7 @@ PACMAN_DEPS=(
     wireplumber
     wl-clipboard
     calcurse
+    fcitx5
 
     # Terminal y shell
     alacritty
@@ -45,6 +46,9 @@ PACMAN_DEPS=(
     polkit-gnome
     gnome-keyring
     libsecret
+    calcurse
+    bluetui
+    impala
 
     # Fuentes
     noto-fonts
@@ -53,19 +57,7 @@ PACMAN_DEPS=(
 )
 
 AUR_DEPS=(
-    elephant
-    elephant-bluetooth
-    elephant-calc
-    elephant-clipboard
-    elephant-desktopapplications
-    elephant-files
-    elephant-menus
-    elephant-providerlist
-    elephant-runner
-    elephant-symbols
-    elephant-todo
-    elephant-unicode
-    elephant-websearch
+    elephant-all
     xdg-terminal-exec
     yaru-icon-theme
     linux-wallpaperengine-git
@@ -74,5 +66,6 @@ AUR_DEPS=(
 )
 
 CACHYOS_DEPS=(
+    paru
     walker
 )
