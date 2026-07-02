@@ -8,10 +8,6 @@
 # Se corre UNA vez en una instalación nueva. Es re-corrible sin problema:
 # cada script y cada paso ya es idempotente (chequea antes de instalar/tocar nada).
 #
-# paru YA NO se instala acá — install-hyprchy se encarga (usa el paru del repo
-# de CachyOS si está disponible, o lo compila de fuente si no). Instalarlo acá
-# antes duplicaba lógica y daba problemas de timing con el resto de los pasos.
-#
 # Uso:
 #   ./install-all
 #

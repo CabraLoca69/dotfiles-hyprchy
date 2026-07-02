@@ -36,7 +36,7 @@ Orden correcto:
 ## Instalación
 
 ```bash
-git clone <este-repo> ~/dotfiles-hyprchy
+git clone https://github.com/CabraLoca69/dotfiles-hyprchy.git
 cd ~/dotfiles-hyprchy
 ./install-all
 ```
@@ -215,14 +215,14 @@ cat /etc/NetworkManager/conf.d/*.conf 2>/dev/null
 cat /usr/lib/NetworkManager/conf.d/*.conf 2>/dev/null
 
 buscamos algo como:
-'''
-[device]
-wifi.backend=iwd
-managed=true
-'''
+
+`[device]`
+`wifi.backend=iwd`
+`managed=true`
+
 
 si no esta la solcion es agregarlo:
-'''
+```
 sudo mkdir -p /etc/NetworkManager/conf.d
 cat | sudo tee /etc/NetworkManager/conf.d/wifi-managed.conf << 'EOF'
 [device]
@@ -230,5 +230,5 @@ wifi.backend=iwd
 managed=true
 EOF
 sudo systemctl restart NetworkManager
-'''
+```
 

@@ -16,7 +16,10 @@ PACMAN_DEPS=(
     hyprpicker
     xdg-desktop-portal-hyprland
     xdg-desktop-portal-gtk
+    qt5-wayland
+    qt6-wayland
     uwsm
+    kitty
 
     # Waybar y notificaciones
     waybar
