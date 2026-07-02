@@ -133,6 +133,21 @@ instalación limpia — hasta que alguien elige un tema activamente, cosas que d
 Si agregás temas nuevos, asegurate de que el que quede como default en `current/theme` sea uno
 real, versionado en el repo — no solo el symlink apuntando a un directorio vacío.
 
+## Terminal default para `xdg-terminal-exec`
+
+Varios binds/scripts (incluido `omarchy-launch-floating-terminal`) usan `xdg-terminal-exec` para
+abrir "el terminal default del usuario" sin hardcodear cuál es. Necesita
+`~/.config/xdg-terminals.list`, un archivo de texto plano con un `.desktop` por línea, en orden de
+preferencia — usa el primero que encuentre instalado:
+
+```
+Alacritty.desktop
+kitty.desktop
+```
+
+`install-hyprchy` lo crea solo (`setup_xdg_terminal()`) si no existe todavía — no lo pisa si ya lo
+tenías configurado a mano. Si usás otro terminal, editá `~/.config/xdg-terminals.list` directo.
+
 ## Drivers de GPU: conflicto con `[cachyos]`
 
 Si tenés el repo `[cachyos]` habilitado en `pacman.conf`, trae `mesa-git` (y variantes `-git` de
@@ -188,6 +203,26 @@ symlinkea si el repo lo tiene).
 `install-drivers` te lo va a preguntar solo; si preferís hacerlo a mano, comentá el bloque
 `[cachyos]` en `/etc/pacman.conf`, corré `install-drivers`, y descomentalo después.
 
+**`impala`/NetworkManager conectan la wifi pero nunca hay IP (`ip addr` solo muestra `link/ether`,
+sin `inet`)** — chequeá si NetworkManager tiene la interfaz como `unmanaged`:
+```bash
+nmcli device show wlan0 | grep -i managed
+```
+Si sale `unmanaged` o vacio, NetworkManager nunca va a pedir IP por DHCP para esa interfaz, aunque `iwd`
+ya la haya asociado a la red (por eso `iwctl station wlan0 show` dice "conectado" pero no hay
+DHCP configurado). Fix:
+```bash
+sudo mkdir -p /etc/NetworkManager/conf.d
+sudo tee /etc/NetworkManager/conf.d/wifi-managed.conf << 'EOF'
+[device]
+wifi.backend=iwd
+managed=true
+EOF
+sudo systemctl restart NetworkManager
+```
+Reconectá después con `impala` o `nmcli device wifi connect "TU_RED"` y confirmá con
+`ip addr show wlan0` que ahora aparece una línea `inet 192.168.x.x/...`.
+
 **`paru: error while loading shared libraries: libalpm.so.N`** — te quedó un `paru-bin` viejo de
 antes de este fix. `sudo pacman -R paru-bin` y volvé a correr `install-hyprchy` (instala `paru`
 fuente).
@@ -201,34 +236,6 @@ no con iwd — por eso no lo ve como conocida aunque el link físico esté activ
 nmcli connection delete "NOMBRE_DE_TU_RED"
 nmcli device wifi connect "NOMBRE_DE_TU_RED"
 ```
-
 No se automatizó en el instalador a propósito — borrar conexiones de NetworkManager a ciegas
 podría romper perfiles wifi que ya andaban bien en una instalación existente. Con Ethernet no
 debería pasar, no hay handshake de iwd/NetworkManager de por medio.
-
-Si despues de hacer eso no se puede conectar hay que revisar si alguien esta "manejando" la conexion
-nmcli device show wlan0 | grep -i managed
-nmcli device show wlan0 | grep -i state
-
-se puede revisar:
-cat /etc/NetworkManager/conf.d/*.conf 2>/dev/null
-cat /usr/lib/NetworkManager/conf.d/*.conf 2>/dev/null
-
-buscamos algo como:
-
-`[device]`
-`wifi.backend=iwd`
-`managed=true`
-
-
-si no esta la solcion es agregarlo:
-```
-sudo mkdir -p /etc/NetworkManager/conf.d
-cat | sudo tee /etc/NetworkManager/conf.d/wifi-managed.conf << 'EOF'
-[device]
-wifi.backend=iwd
-managed=true
-EOF
-sudo systemctl restart NetworkManager
-```
-

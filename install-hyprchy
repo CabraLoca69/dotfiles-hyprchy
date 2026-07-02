@@ -57,6 +57,7 @@ source "$DEPENDENCIES_FILE"
 # ──────────────────────────────────────────────
 # paru
 # ──────────────────────────────────────────────
+#
 
 install_paru() {
     section "paru"
@@ -214,6 +215,26 @@ EOF
     fi
 }
 
+setup_xdg_terminal() {
+    section "Configurando terminal default para xdg-terminal-exec"
+
+    mkdir -p "$HOME/.config"
+    local list_file="$HOME/.config/xdg-terminals.list"
+
+    if [ -f "$list_file" ]; then
+        info "$list_file ya existe, no lo piso."
+        return
+    fi
+
+    cat > "$list_file" << 'EOF'
+Alacritty.desktop
+kitty.desktop
+EOF
+    info "$list_file configurado (Alacritty como default, kitty como fallback)."
+    warning "Ajustá el orden/contenido si usás otro terminal — xdg-terminal-exec usa"
+    warning "el primero de la lista que tenga un .desktop instalado."
+}
+
 # ──────────────────────────────────────────────
 # Symlinks
 # ──────────────────────────────────────────────
@@ -316,11 +337,6 @@ enable_elephant() {
     fi
 }
 
-# Symlinks "atómicos" a /usr/local/bin — red de seguridad opcional. No
-# reemplaza a setup_uwsm_env (que es la forma correcta), pero cubre el caso
-# de emergencia donde algo lanzado por uwsm-app no encuentra un binario
-# propio y no da tiempo/ganas de averiguar por qué. Seleccionable con
-# --atomic-bin, re-corrible en cualquier momento.
 atomic_bin_symlinks() {
     section "Symlinks atómicos a /usr/local/bin (red de seguridad)"
 
@@ -385,6 +401,7 @@ main() {
     install_aur_deps
     setup_path
     setup_uwsm_env
+    setup_xdg_terminal
     create_symlinks
     symlink_systemd_units
     symlink_autostart_entries
