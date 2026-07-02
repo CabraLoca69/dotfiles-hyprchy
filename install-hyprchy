@@ -395,17 +395,17 @@ main() {
     echo "  └─────────────────────────────┘"
     echo -e "${NC}"
 
-    install_cachyos_deps
-    install_paru
-    install_pacman_deps
-    install_aur_deps
-    setup_path
-    setup_uwsm_env
-    setup_xdg_terminal
+    #install_cachyos_deps
+    #install_paru
+    #install_pacman_deps
+    #install_aur_deps
+    #setup_path
+    #setup_uwsm_env
+    #setup_xdg_terminal
     create_symlinks
-    symlink_systemd_units
-    symlink_autostart_entries
-    enable_elephant
+    #symlink_systemd_units
+    #symlink_autostart_entries
+    #enable_elephant
 
     if [[ " $* " == *" --atomic-bin "* ]]; then
         atomic_bin_symlinks

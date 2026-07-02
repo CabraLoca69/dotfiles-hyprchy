@@ -9,7 +9,7 @@
   "margin-right": 8,
   "margin-bottom": 0,
  
-  "group/left1": {
+  "gup/left1": {
     "orientation": "inherit",
     "modules": ["custom/omarchy", "clock", "custom/voxtype"] //"custom/idle-indicator", "custom/notification-silencing-indicator", "custom/weather"]
    },
