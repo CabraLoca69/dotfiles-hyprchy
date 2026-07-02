@@ -201,6 +201,34 @@ no con iwd — por eso no lo ve como conocida aunque el link físico esté activ
 nmcli connection delete "NOMBRE_DE_TU_RED"
 nmcli device wifi connect "NOMBRE_DE_TU_RED"
 ```
+
 No se automatizó en el instalador a propósito — borrar conexiones de NetworkManager a ciegas
 podría romper perfiles wifi que ya andaban bien en una instalación existente. Con Ethernet no
 debería pasar, no hay handshake de iwd/NetworkManager de por medio.
+
+Si despues de hacer eso no se puede conectar hay que revisar si alguien esta "manejando" la conexion
+nmcli device show wlan0 | grep -i managed
+nmcli device show wlan0 | grep -i state
+
+se puede revisar:
+cat /etc/NetworkManager/conf.d/*.conf 2>/dev/null
+cat /usr/lib/NetworkManager/conf.d/*.conf 2>/dev/null
+
+buscamos algo como:
+'''
+[device]
+wifi.backend=iwd
+managed=true
+'''
+
+si no esta la solcion es agregarlo:
+'''
+sudo mkdir -p /etc/NetworkManager/conf.d
+cat | sudo tee /etc/NetworkManager/conf.d/wifi-managed.conf << 'EOF'
+[device]
+wifi.backend=iwd
+managed=true
+EOF
+sudo systemctl restart NetworkManager
+'''
+
