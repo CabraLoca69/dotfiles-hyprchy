@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 #INSTAL-HYPRCHY
 #
+# Estructura del repo esperada (ver README):
+#   common/           dotfiles compartidos entre todas las máquinas
+#   hosts/<hostname>/  overrides puntuales de esta máquina (mismo layout
+#                       relativo que common/, ej: hosts/cloca-not/.config/hypr/monitors.lua)
+# El hostname se detecta con `hostnamectl --static`. Todo se symlinkea
+# archivo por archivo — un host puede overridear un solo archivo sin
+# duplicar el resto del directorio que lo contiene.
+#
 # Uso:
 #   ./install-hyprchy                # instalación normal
 #   ./install-hyprchy --atomic-bin   # además, symlinkea ~/.local/bin y
@@ -58,6 +66,18 @@ source "$DEPENDENCIES_FILE"
 # paru
 # ──────────────────────────────────────────────
 #
+# Se instala ACÁ, no en install-all, porque:
+#   - si el repo [cachyos] está disponible, paru se instala como paquete
+#     normal de ese repo (ya viene compilado y sano, es el camino rápido)
+#   - si no está disponible, hay que compilarlo de fuente sí o sí. Usamos
+#     'paru' (fuente, vía AUR) y NO 'paru-bin' (precompilado) — paru-bin
+#     viene linkeado contra el libalpm.so.<N> del sistema del mantenedor en
+#     el momento de compilarlo, y en distros con pacman de build git/dev
+#     (como CachyOS) el soname de libalpm cambia seguido, dejando paru-bin
+#     roto con "error while loading shared libraries: libalpm.so.N: cannot
+#     open shared object file" sin arreglo posible salvo esperar una build
+#     nueva en el AUR. 'paru' fuente compila contra el libalpm real del
+#     sistema en el momento de instalarlo, así que no tiene ese problema.
 
 install_paru() {
     section "paru"
@@ -255,24 +275,48 @@ symlink() {
     info "$dst → $src"
 }
 
+HOSTNAME_ID="$(hostnamectl --static 2>/dev/null || hostname)"
+COMMON_DIR="$DOTFILES_DIR/common"
+HOST_DIR="$DOTFILES_DIR/hosts/$HOSTNAME_ID"
+
+# Symlinkea, archivo por archivo (no directorio por directorio), todo lo que
+# haya bajo $src_root replicando la misma estructura relativa dentro de
+# $HOME. Al ser por archivo individual, un host puede overridear UN SOLO
+# archivo (ej: .config/hypr/monitors.lua, .local/bin/waybar-cpu-watts) sin
+# tener que duplicar el resto del directorio que lo contiene.
+symlink_tree() {
+    local src_root="$1"
+    local label="$2"
+
+    if [ ! -d "$src_root" ]; then
+        return
+    fi
+
+    section "Symlinks ($label)"
+    while IFS= read -r -d '' src_file; do
+        local rel_path="${src_file#"$src_root"/}"
+        symlink "$src_file" "$HOME/$rel_path"
+    done < <(find "$src_root" \( -type f -o -type l \) -print0)
+}
+
 create_symlinks() {
-    section "Creando symlinks (config general)"
+    if [ ! -d "$COMMON_DIR" ]; then
+        error "No encuentro $COMMON_DIR — ¿el repo no tiene la estructura common/hosts?"
+        exit 1
+    fi
 
-    for dir in "$DOTFILES_DIR"/.config/*/; do
-        name="$(basename "$dir")"
-        symlink "$dir" "$HOME/.config/$name"
-    done
+    # Orden importa: primero common/ (la base), después hosts/<hostname>/
+    # ENCIMA (gana, porque symlink() reemplaza el symlink si ya existe).
+    symlink_tree "$COMMON_DIR" "common"
+    symlink_tree "$HOST_DIR" "override: $HOSTNAME_ID"
 
-    for dir in "$DOTFILES_DIR"/.local/share/*/; do
-        name="$(basename "$dir")"
-        symlink "$dir" "$HOME/.local/share/$name"
-    done
-
-    mkdir -p "$HOME/.local/bin"
-    for file in "$DOTFILES_DIR"/.local/bin/*; do
-        name="$(basename "$file")"
-        symlink "$file" "$HOME/.local/bin/$name"
-    done
+    if [ ! -d "$HOST_DIR" ]; then
+        warning "No hay overrides para este host ('$HOSTNAME_ID') en hosts/."
+        warning "Usando solo common/ — puede que falten cosas específicas de esta"
+        warning "máquina (monitores, waybar-cpu-watts/waybar-gpu con paths de hwmon"
+        warning "propios, etc). Si hace falta, creá hosts/$HOSTNAME_ID/ con los"
+        warning "archivos puntuales que difieran (misma estructura relativa que common/)."
+    fi
 }
 
 # Unidades de systemd --user que vienen con el repo (ej: swayosd-server.service).
@@ -337,6 +381,11 @@ enable_elephant() {
     fi
 }
 
+# Symlinks "atómicos" a /usr/local/bin — red de seguridad opcional. No
+# reemplaza a setup_uwsm_env (que es la forma correcta), pero cubre el caso
+# de emergencia donde algo lanzado por uwsm-app no encuentra un binario
+# propio y no da tiempo/ganas de averiguar por qué. Seleccionable con
+# --atomic-bin, re-corrible en cualquier momento.
 atomic_bin_symlinks() {
     section "Symlinks atómicos a /usr/local/bin (red de seguridad)"
 

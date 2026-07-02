@@ -36,7 +36,7 @@ Orden correcto:
 ## Instalación
 
 ```bash
-git clone https://github.com/CabraLoca69/dotfiles-hyprchy.git
+git clone <este-repo> ~/dotfiles-hyprchy
 cd ~/dotfiles-hyprchy
 ./install-all
 ```
@@ -174,17 +174,54 @@ momento de compilarlo. En distros con `pacman` de build git/dev (como CachyOS,
 posible salvo esperar una build nueva en el AUR. `paru` fuente compila contra el `libalpm` real del
 sistema en el momento de instalarlo, así que no tiene ese problema.
 
+## Múltiples máquinas: `common/` + `hosts/<hostname>/`
+
+Este repo se usa en más de una máquina (PC de escritorio, notebook), cada una con su propia
+config de monitores, y un par de scripts que leen paths de hardware hardcodeados
+(`waybar-cpu-watts`, `waybar-gpu` — hwmon es distinto por equipo). En vez de ramas de git
+separadas por máquina (que obligan a propagar a mano cada fix común a todas, con riesgo de
+que una máquina se quede desactualizada sin que te des cuenta), la config vive en una sola
+rama, separada en dos árboles:
+
+```
+common/                    # compartido entre TODAS las máquinas
+├── .config/hypr/hyprland.lua, helpers.lua, bindings.lua, ...
+└── .local/bin/, .local/share/omarchy/, ...
+
+hosts/
+├── cloca-not/              # overrides SOLO para esta máquina (notebook)
+│   └── .config/hypr/monitors.lua
+└── cloca-pc/                # overrides SOLO para esta máquina (PC)
+    ├── .config/hypr/monitors.lua
+    ├── .local/bin/waybar-cpu-watts
+    └── .local/bin/waybar-gpu
+```
+
+`install-hyprchy` detecta el hostname (`hostnamectl --static`) y symlinkea **archivo por
+archivo** (no directorio por directorio) primero todo `common/`, y después, si existe,
+`hosts/<hostname>/` encima. Como es a nivel archivo individual, un host puede overridear **un
+solo archivo** (por ejemplo `monitors.lua`) sin duplicar el resto de la carpeta que lo contiene
+— todo lo demás en `.config/hypr/` sigue viniendo de `common/`.
+
+Si una máquina nueva no tiene carpeta en `hosts/`, el instalador avisa pero no falla — usa
+`common/` solo, y vos agregás `hosts/<hostname-nuevo>/` con lo puntual que haga falta cuando
+lo necesites.
+
+⚠️ Este esquema permite *agregar/reemplazar* archivos por host, pero no *excluir* uno que
+exista en `common/` (no hay forma de decir "en esta máquina, este archivo de común no va"). Si
+en algún momento hace falta eso, hay que agregarle al script una lista de exclusión — no
+implementado todavía porque no hizo falta.
+
 ## Estructura del repo
 
 ```
-install-all              # orquesta los 3 pasos de instalación
-install-hyprchy           # paru, deps, PATH, symlinks, systemd units, walker/elephant
-install-drivers           # CPU/GPU (microcode, mesa/vulkan/nvidia, bootloader)
-bootstrap-system           # multilib, servicios, grupos, keyring, display manager
-dependencies                # PACMAN_DEPS / AUR_DEPS / CACHYOS_DEPS
-.config/                     # symlinkeado en bloque a ~/.config/
-.local/bin/                   # symlinkeado en bloque a ~/.local/bin/
-.local/share/omarchy/           # symlinkeado en bloque a ~/.local/share/omarchy/
+install-all                 # orquesta los 3 pasos de instalación
+install-hyprchy               # paru, deps, PATH, symlinks (common+hosts), systemd units, walker/elephant
+install-drivers                # CPU/GPU (microcode, mesa/vulkan/nvidia, bootloader)
+bootstrap-system                 # multilib, servicios, grupos, keyring, display manager
+dependencies                       # PACMAN_DEPS / AUR_DEPS / CACHYOS_DEPS
+common/                              # dotfiles compartidos, symlinkeados siempre
+hosts/<hostname>/                      # overrides puntuales por máquina, symlinkeados encima
 ```
 
 ## Troubleshooting rápido
@@ -208,7 +245,7 @@ sin `inet`)** — chequeá si NetworkManager tiene la interfaz como `unmanaged`:
 ```bash
 nmcli device show wlan0 | grep -i managed
 ```
-Si sale `unmanaged` o vacio, NetworkManager nunca va a pedir IP por DHCP para esa interfaz, aunque `iwd`
+Si sale `unmanaged`, NetworkManager nunca va a pedir IP por DHCP para esa interfaz, aunque `iwd`
 ya la haya asociado a la red (por eso `iwctl station wlan0 show` dice "conectado" pero no hay
 DHCP configurado). Fix:
 ```bash
