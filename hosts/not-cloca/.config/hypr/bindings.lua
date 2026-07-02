@@ -21,13 +21,6 @@ o.bind("SUPER + ALT + C", "Wallpaper selector", "omarchy-launch-or-focus -f -t '
 -- sicroniza y actualiza
 o.bind("SUPER + ALT + CTRL + U", "Update system", "omarchy-launch-or-focus -f -d -t 'Update' paru -Syu")
 
--- obs keybindings
-o.bind("CTRL + SHIFT + F1",
-        "Obs Clip",
-        hl.dsp.pass({
-                window = "class:^(com\\.obsproject\\.Studio)$" })
-)
-
 
 --nautilus
 o.bind("SHIFT + ALT + E", "Open filexplorer", "nautilus")

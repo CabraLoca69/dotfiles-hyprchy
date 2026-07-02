@@ -30,8 +30,8 @@ end)
 --o.launch_on_start("sh -c 'sleep 2 && obs --minimize-to-tray --startreplaybuffer'")
 
 -- abrir ds, spotify y steam 
---o.exec_on_start("steam -silent")
---o.exec_on_start("sleep 4 && discord")
---o.exec_on_start("spotify")
+o.exec_on_start("steam -silent")
+o.exec_on_start("sleep 4 && discord")
+o.exec_on_start("spotify")
 
 

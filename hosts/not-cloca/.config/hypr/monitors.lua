@@ -5,21 +5,22 @@ local omarchy_gdk_scale = 1.25
 local omarchy_monitor_scale = 1.25
 
 hl.monitor({
-    output = "DP-1",
-    mode = "1920x1080@165",
+    output = "eDP-1",
+    mode = "1366x768@59.999",
     position = "0x0",
     scale = 1,
     vrr = 0,
 })
 
 hl.monitor({
-    output = "DP-3",
-    mode = "1920x1080@165",
-    position = "1920x-700",
+    output = "HDMI-A-1",
+    mode = "",
+    position = "1366x0", --"-1366x0" --va izq o der
     scale = 1,
-    transform = 3,
     vrr = 0,
+    --transform = -- lo rota
 })
+
 
 -- Optimized for retina-class 2x displays, like 13" 2.8K, 27" 5K, 32" 6K.
 -- local omarchy_gdk_scale = 2
