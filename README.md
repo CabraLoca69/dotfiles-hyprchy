@@ -276,3 +276,16 @@ nmcli device wifi connect "NOMBRE_DE_TU_RED"
 No se automatizó en el instalador a propósito — borrar conexiones de NetworkManager a ciegas
 podría romper perfiles wifi que ya andaban bien en una instalación existente. Con Ethernet no
 debería pasar, no hay handshake de iwd/NetworkManager de por medio.
+
+
+Para activar el auto login basta con: 
+```bash
+sudo mkdir -p /etc/sddm.conf.d && sudo tee /etc/sddm.conf.d/autologin.conf >/dev/null <<EOF
+[Autologin]
+User=$USER
+Session=hyprland.desktop
+EOF
+```
+
+Posteriormente se puede configurar el hyprlock para que bloquee la pantalla, ambos tienen temas 
+asi que es cuestion de elegir nomas.

@@ -39,6 +39,7 @@ PACMAN_DEPS=(
     eza
     starship
     zoxide
+    fastfetch
 
     # Archivos y sistema
     nautilus
