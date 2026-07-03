@@ -278,12 +278,14 @@ podría romper perfiles wifi que ya andaban bien en una instalación existente. 
 debería pasar, no hay handshake de iwd/NetworkManager de por medio.
 
 
-Para activar el auto login basta con: 
+
+Para activar autologin (se hace automatico en system-bootstrap): 
+
 ```bash
 sudo mkdir -p /etc/sddm.conf.d && sudo tee /etc/sddm.conf.d/autologin.conf >/dev/null <<EOF
 [Autologin]
 User=$USER
-Session=hyprland.desktop
+Session=hyprland-uwsm.desktop
 EOF
 ```
 

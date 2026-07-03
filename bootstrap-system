@@ -88,6 +88,54 @@ setup_display_manager() {
 }
 
 # ──────────────────────────────────────────────
+# Autologin de SDDM
+# ──────────────────────────────────────────────
+#
+# Salta la pantalla de login por completo, entra directo a la sesión gráfica
+# al bootear. 
+
+setup_sddm_autologin() {
+    section "Autologin de SDDM"
+
+    if ! pacman -Qi sddm &>/dev/null; then
+        warning "sddm no está instalado, salteando autologin."
+        return
+    fi
+
+    local user="${SUDO_USER:-$USER}"
+    local session="hyprland-uwsm.desktop"
+    local conf_file="/etc/sddm.conf.d/autologin.conf"
+
+    if [ ! -f "/usr/share/wayland-sessions/$session" ] \
+        && [ ! -f "/usr/local/share/wayland-sessions/$session" ]; then
+        warning "No encontré la sesión '$session' en wayland-sessions/, salteando autologin."
+        MANUAL_NOTES+=("Autologin de SDDM no configurado: no se encontró la sesión '$session'. Revisá 'ls /usr/share/wayland-sessions/' y, si el nombre es otro, corré este script de nuevo o creá $conf_file a mano con el nombre correcto en 'Session='.")
+        return
+    fi
+
+    if [ -f "$conf_file" ] && grep -q "^User=$user$" "$conf_file" && grep -q "^Session=$session$" "$conf_file"; then
+        info "$conf_file ya tiene autologin configurado para $user."
+        return
+    fi
+
+    warning "Autologin arranca la sesión gráfica SIN pedir contraseña al bootear el equipo."
+    warning "Solo tiene sentido si esta máquina no sale de un entorno de confianza."
+    if ! ask_yes_no "¿Configurar autologin de SDDM para '$user' con sesión '$session'?"; then
+        info "Autologin no configurado (podés correr este script de nuevo cuando quieras)."
+        return
+    fi
+
+    sudo mkdir -p /etc/sddm.conf.d
+    sudo tee "$conf_file" >/dev/null << EOF
+[Autologin]
+User=$user
+Session=$session
+EOF
+    info "$conf_file creado — autologin habilitado para $user."
+    MANUAL_NOTES+=("Autologin activado: la sesión arranca sola al bootear, sin pedir contraseña. Si querés que arranque bloqueada igual, agregá 'hyprlock' bien arriba de tu autostart.lua (antes que waybar/hypridle/etc) para que se dispare apenas inicia la sesión.")
+}
+
+# ──────────────────────────────────────────────
 # multilib
 # ──────────────────────────────────────────────
 
@@ -263,6 +311,7 @@ main() {
     echo -e "${NC}"
 
     setup_display_manager
+    setup_sddm_autologin
     enable_multilib
     enable_core_services
     add_user_groups
