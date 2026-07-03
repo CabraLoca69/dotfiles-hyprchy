@@ -36,7 +36,7 @@ Orden correcto:
 ## Instalación
 
 ```bash
-git clone <este-repo> ~/dotfiles-hyprchy
+git clone https://github.com/CabraLoca69/dotfiles-hyprchy.git
 cd ~/dotfiles-hyprchy
 ./install-all
 ```

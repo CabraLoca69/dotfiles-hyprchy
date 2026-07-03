@@ -63,10 +63,10 @@ PACMAN_DEPS=(
 AUR_DEPS=(
     elephant-all
     xdg-terminal-exec
-    yaru-icon-theme
-    linux-wallpaperengine-git
     sunwait
     hyprland-preview-share-picker-git
+    yaru-icon-theme
+    linux-wallpaperengine-git
 )
 
 CACHYOS_DEPS=(
