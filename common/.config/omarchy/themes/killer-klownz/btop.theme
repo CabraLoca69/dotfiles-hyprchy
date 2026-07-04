@@ -1,0 +1,90 @@
+# ██╗  ██╗██╗██╗     ██╗     ███████╗██████╗
+# ██║ ██╔╝██║██║     ██║     ██╔════╝██╔══██╗
+# █████╔╝ ██║██║     ██║     █████╗  ██████╔╝
+# ██╔═██╗ ██║██║     ██║     ██╔══╝  ██╔══██╗
+# ██║  ██╗██║███████╗███████╗███████╗██║  ██║
+# ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝
+#
+# ██╗  ██╗██╗      ██████╗ ██╗    ██╗███╗   ██╗███████╗
+# ██║ ██╔╝██║     ██╔═══██╗██║    ██║████╗  ██║╚══███╔╝
+# █████╔╝ ██║     ██║   ██║██║ █╗ ██║██╔██╗ ██║  ███╔╝
+# ██╔═██╗ ██║     ██║   ██║██║███╗██║██║╚██╗██║ ███╔╝
+# ██║  ██╗███████╗╚██████╔╝╚███╔███╔╝██║ ╚████║███████╗
+# ╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝
+
+# Main background, empty for terminal default, need to be empty if you want transparent background
+theme[main_bg]="#0b0a10"
+
+# Main text color
+theme[main_fg]="#3cfaff"
+
+# Title color for boxes
+theme[title]="#b96bff"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#ff4fd8"
+
+# Background color of selected item in processes box
+theme[selected_bg]="#7a74a0"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#3cfaff"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="#7a74a0"
+
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="#b96bff"
+
+# Box outline and divider line color
+theme[cpu_box]="#2dff6a"
+theme[mem_box]="#2dff6a"
+theme[net_box]="#2dff6a"
+theme[proc_box]="#2dff6a"
+theme[div_line]="#7a74a0"
+
+# Gradient for all meters and graphs
+theme[temp_start]="#ff4fd8"
+theme[temp_mid]="#4b6cff"
+theme[temp_end]="#2dff6a"
+
+
+theme[cpu_start]="#ff4fd8"
+theme[cpu_mid]="#4b6cff"
+theme[cpu_end]="#2dff6a"
+
+
+theme[free_start]="#4b6cff"
+theme[free_mid]="#ffe347"
+theme[free_end]="#ffe347"
+
+
+theme[cached_start]="#ffe347"
+theme[cached_mid]="#ffe347"
+theme[cached_end]="#ffe347"
+
+
+theme[available_start]="#ff4fd8"
+theme[available_mid]="#ff4fd8"
+theme[available_end]="#ff4fd8"
+
+
+theme[used_start]="#2dff6a"
+theme[used_mid]="#2dff6a"
+theme[used_end]="#2dff6a"
+
+
+theme[download_start]="#ffe347"
+theme[download_mid]="#ff4fd8"
+theme[download_end]="#4b6cff"
+
+
+theme[upload_start]="#ffe347"
+theme[upload_mid]="#ff4fd8"
+theme[upload_end]="#4b6cff"
+
+#  ,-----. ,--.   ,--.     ,--.       ,--.          ,--.
+# '  .-.  '|  | ,-|  |     |  | ,---. |  |-.  ,---. |  |-.  ,---.
+# |  | |  ||  |' .-. |,--. |  || .-. || .-. '| .-. || .-. '| .-. |
+# '  '-'  '|  |\ `-' ||  '-'  /' '-' '| `-' |' '-' '| `-' |' '-' '
+#  `-----' `--' `---'  `-----'  `---'  `---'  `---'  `---'  `---'

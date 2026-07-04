@@ -65,19 +65,6 @@ source "$DEPENDENCIES_FILE"
 # ──────────────────────────────────────────────
 # paru
 # ──────────────────────────────────────────────
-#
-# Se instala ACÁ, no en install-all, porque:
-#   - si el repo [cachyos] está disponible, paru se instala como paquete
-#     normal de ese repo (ya viene compilado y sano, es el camino rápido)
-#   - si no está disponible, hay que compilarlo de fuente sí o sí. Usamos
-#     'paru' (fuente, vía AUR) y NO 'paru-bin' (precompilado) — paru-bin
-#     viene linkeado contra el libalpm.so.<N> del sistema del mantenedor en
-#     el momento de compilarlo, y en distros con pacman de build git/dev
-#     (como CachyOS) el soname de libalpm cambia seguido, dejando paru-bin
-#     roto con "error while loading shared libraries: libalpm.so.N: cannot
-#     open shared object file" sin arreglo posible salvo esperar una build
-#     nueva en el AUR. 'paru' fuente compila contra el libalpm real del
-#     sistema en el momento de instalarlo, así que no tiene ese problema.
 
 install_paru() {
     section "paru"
@@ -181,17 +168,6 @@ install_cachyos_deps() {
     fi
 }
 
-# ──────────────────────────────────────────────
-# PATH — dos mecanismos, cada uno cubre un contexto distinto:
-#   - shell rc: para shells interactivas (terminal local, SSH)
-#   - ~/.config/uwsm/env: para todo lo que arranca DENTRO de la sesión
-#     gráfica vía uwsm-app/systemd --user (waybar, binds, autostart). NO es
-#     redundante con lo de arriba — ~/.config/environment.d/ NO sirve para
-#     esto porque systemd tiene un bug/limitación conocida donde PATH
-#     específicamente se ignora ahí (ver systemd/systemd#12259). uwsm lee
-#     este archivo con su propio mecanismo, no el generador de systemd.
-# ──────────────────────────────────────────────
-
 setup_path() {
     section "Configurando PATH (shell interactiva)"
 
@@ -275,48 +251,43 @@ symlink() {
     info "$dst → $src"
 }
 
-HOSTNAME_ID="$(hostnamectl --static 2>/dev/null || hostname)"
-COMMON_DIR="$DOTFILES_DIR/common"
-HOST_DIR="$DOTFILES_DIR/hosts/$HOSTNAME_ID"
 
-# Symlinkea, archivo por archivo (no directorio por directorio), todo lo que
-# haya bajo $src_root replicando la misma estructura relativa dentro de
-# $HOME. Al ser por archivo individual, un host puede overridear UN SOLO
-# archivo (ej: .config/hypr/monitors.lua, .local/bin/waybar-cpu-watts) sin
-# tener que duplicar el resto del directorio que lo contiene.
-symlink_tree() {
-    local src_root="$1"
-    local label="$2"
+MERGED_DIR="$DOTFILES_DIR/merged"
 
-    if [ ! -d "$src_root" ]; then
-        return
-    fi
+# Symlinkea merged/$rel -> $HOME/$rel, recursivo. Si $HOME/$rel ya existe
+# como directorio REAL (no symlink) -> hay contenido ajeno al repo ahí
+# (ej: ~/.config con otras apps) -> no lo tocamos, bajamos un nivel más.
+# Si no existe, o ya es un symlink nuestro de antes -> symlink de la carpeta
+# entera, de una.
+link_merged() {
+    local rel="$1"
+    local src="$MERGED_DIR${rel:+/$rel}"
+    local target="$HOME${rel:+/$rel}"
 
-    section "Symlinks ($label)"
-    while IFS= read -r -d '' src_file; do
-        local rel_path="${src_file#"$src_root"/}"
-        symlink "$src_file" "$HOME/$rel_path"
-    done < <(find "$src_root" \( -type f -o -type l \) -print0)
+    local entry name entry_rel
+    for entry in "$src"/* "$src"/.[!.]*; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+        name="$(basename "$entry")"
+        entry_rel="${rel:+$rel/}$name"
+        local t="$target/$name"
+
+        if [ -d "$entry" ] && [ ! -L "$entry" ] && [ -d "$t" ] && [ ! -L "$t" ]; then
+            link_merged "$entry_rel"      # ya existe contenido real ahí -> bajar
+        else
+            symlink "$entry" "$t"         # symlink de golpe (archivo o carpeta entera)
+        fi
+    done
 }
 
 create_symlinks() {
-    if [ ! -d "$COMMON_DIR" ]; then
-        error "No encuentro $COMMON_DIR — ¿el repo no tiene la estructura common/hosts?"
+    if [ ! -d "$MERGED_DIR" ]; then
+        error "No encuentro $MERGED_DIR — corré antes ./build-merged.sh"
         exit 1
     fi
 
-    # Orden importa: primero common/ (la base), después hosts/<hostname>/
-    # ENCIMA (gana, porque symlink() reemplaza el symlink si ya existe).
-    symlink_tree "$COMMON_DIR" "common"
-    symlink_tree "$HOST_DIR" "override: $HOSTNAME_ID"
-
-    if [ ! -d "$HOST_DIR" ]; then
-        warning "No hay overrides para este host ('$HOSTNAME_ID') en hosts/."
-        warning "Usando solo common/ — puede que falten cosas específicas de esta"
-        warning "máquina (monitores, waybar-cpu-watts/waybar-gpu con paths de hwmon"
-        warning "propios, etc). Si hace falta, creá hosts/$HOSTNAME_ID/ con los"
-        warning "archivos puntuales que difieran (misma estructura relativa que common/)."
-    fi
+    section "Symlinks (desde merged/)"
+    mkdir -p "$HOME"
+    link_merged ""
 }
 
 # Unidades de systemd --user que vienen con el repo (ej: swayosd-server.service).
@@ -363,6 +334,19 @@ symlink_autostart_entries() {
     fi
 }
 
+# ──────────────────────────────────────────────
+# Symlinks internos fijos
+# ──────────────────────────────────────────────
+#
+# current/theme/ es estado RUNTIME que genera el theme switcher, no un
+# dotfile — por eso no vive en el repo. Estos symlinks son la relación fija
+# hacia ese estado derivado, y el "set" de más abajo lo genera la primera vez.
+
+repair_internal_symlinks() {
+    section "Symlinks internos (mako -> tema actual)"
+    symlink "$HOME/.config/omarchy/current/theme/mako.ini" "$HOME/.config/mako/config"
+}
+
 # elephant (backend de walker) no se habilita symlinkeando un .service — trae
 # su propio subcomando que genera y habilita su unidad.
 enable_elephant() {
@@ -399,6 +383,28 @@ atomic_bin_symlinks() {
     done
 }
 
+
+# TODO: definir el tema default (placeholder, lo armás vos después)
+DEFAULT_THEME="event-horizon"
+
+set_default_theme() {
+    section "Aplicando tema por defecto"
+
+    if [ -z "$DEFAULT_THEME" ]; then
+        warning "DEFAULT_THEME no está definido, salteando theme set."
+        warning "Corré manualmente: theme-manager set <tema> -w -k --hyprlock"
+        return
+    fi
+
+    if ! command -v theme-manager &>/dev/null; then
+        warning "theme-manager no encontrado, salteando."
+        return
+    fi
+
+    theme-manager set "$DEFAULT_THEME" -k --hyprlock -q
+    theme-manager waybar event-horizon
+    info "Tema '$DEFAULT_THEME' aplicado (waybar, walker, hyprlock, mako)."
+}
 # ──────────────────────────────────────────────
 # Avisos post-instalación
 # ──────────────────────────────────────────────
@@ -451,10 +457,14 @@ main() {
     setup_path
     setup_uwsm_env
     setup_xdg_terminal
+    "$DOTFILES_DIR/build-merged"
     create_symlinks
+    repair_internal_symlinks
+    symlink_systemd_units
     symlink_systemd_units
     symlink_autostart_entries
     enable_elephant
+    set_default_theme
 
     if [[ " $* " == *" --atomic-bin "* ]]; then
         atomic_bin_symlinks

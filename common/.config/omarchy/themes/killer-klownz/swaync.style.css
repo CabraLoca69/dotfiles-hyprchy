@@ -1,0 +1,387 @@
+/* ██╗  ██╗██╗██╗     ██╗     ███████╗██████╗ */
+/* ██║ ██╔╝██║██║     ██║     ██╔════╝██╔══██╗ */
+/* █████╔╝ ██║██║     ██║     █████╗  ██████╔╝ */
+/* ██╔═██╗ ██║██║     ██║     ██╔══╝  ██╔══██╗ */
+/* ██║  ██╗██║███████╗███████╗███████╗██║  ██║ */
+/* ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝ */
+/*  */
+/* ██╗  ██╗██╗      ██████╗ ██╗    ██╗███╗   ██╗███████╗ */
+/* ██║ ██╔╝██║     ██╔═══██╗██║    ██║████╗  ██║╚══███╔╝ */
+/* █████╔╝ ██║     ██║   ██║██║ █╗ ██║██╔██╗ ██║  ███╔╝ */
+/* ██╔═██╗ ██║     ██║   ██║██║███╗██║██║╚██╗██║ ███╔╝ */
+/* ██║  ██╗███████╗╚██████╔╝╚███╔███╔╝██║ ╚████║███████╗ */
+/* ╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝ */
+
+/*
+ * Killer Klownz — Cotton Candy Cosmos
+ * Floating notifications: cream/inverted (mirrors mako)
+ * Control center: dark spacecraft world
+ */
+
+:root {
+  /* notification popup — mirrors mako */
+  --noti-bg: #fffaf0;
+  --noti-bg-hover: rgba(255, 79, 216, 0.08);
+  --noti-bg-focus: rgba(255, 79, 216, 0.14);
+  --noti-border: rgba(255, 79, 216, 0.55);
+  --noti-text: #1a0020;
+  --noti-text-muted: rgba(26, 0, 32, 0.72);
+  --noti-app-name: #ff3c8e;
+
+  /* control center panel — dark world */
+  --cc-bg: rgba(11, 10, 16, 0.92);
+  --cc-border: rgba(75, 108, 255, 0.22);
+  --cc-text: #3cfaff;
+  --cc-text-muted: rgba(60, 250, 255, 0.6);
+  --cc-widget-bg: rgba(11, 10, 16, 0.55);
+  --cc-widget-border: rgba(75, 69, 102, 0.35);
+  --cc-hover: rgba(75, 108, 255, 0.14);
+
+  /* shared */
+  --critical: #ff3c8e;
+  --success: #2dff6a;
+  --warning: #ffe347;
+  --accent: #4b6cff;
+  --radius: 12px;
+  --pill-radius: 999px;
+  --noti-shadow: 0 8px 23px rgba(255, 79, 216, 0.18), 0 2px 8px rgba(0, 0, 0, 0.32);
+  --hover-transition: background 0.16s ease-in-out, border-color 0.16s ease-in-out;
+}
+
+notificationwindow,
+blankwindow {
+  background: transparent;
+}
+
+/* ── floating notification popups ─────────────────────────────────── */
+
+.floating-notifications {
+  background: transparent;
+}
+
+.floating-notifications .notification-row .notification-background .notification {
+  background: var(--noti-bg);
+  border: 5px solid var(--noti-border);
+  border-radius: var(--radius);
+  box-shadow: var(--noti-shadow);
+}
+
+/* ── all notification cards ───────────────────────────────────────── */
+
+.notification-row {
+  background: transparent;
+  outline: none;
+}
+
+.notification-row .notification-background {
+  padding: 12px 12px;
+}
+
+.notification-row .notification-background .notification,
+.notification-group .notification {
+  background: var(--noti-bg);
+  border: 2px solid var(--noti-border);
+  border-radius: var(--radius);
+  box-shadow: var(--noti-shadow);
+}
+
+.notification-row .notification-background .notification.normal,
+.notification-group.normal .notification {
+  border-color: rgba(255, 79, 216, 0.5);
+}
+
+.notification-row .notification-background .notification.low,
+.notification-group.low .notification {
+  border-color: rgba(255, 79, 216, 0.25);
+}
+
+.notification-row .notification-background .notification.critical,
+.notification-group.critical .notification {
+  border-color: rgba(255, 60, 142, 0.7);
+  box-shadow: 0 0 0 1px rgba(255, 60, 142, 0.3), var(--noti-shadow);
+}
+
+.notification-row .notification-background .notification .notification-default-action {
+  padding: 8px;
+  margin: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius);
+  color: var(--noti-text);
+  box-shadow: none;
+  transition: var(--hover-transition);
+}
+
+.notification-row .notification-background .notification .notification-default-action:hover,
+.notification-group.collapsed:hover .notification-row:not(:only-child) .notification {
+  background: var(--noti-bg-hover);
+}
+
+.notification-row .notification-background .notification .notification-default-action:focus,
+.notification-row:focus .notification-background .notification {
+  background: var(--noti-bg-focus);
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content {
+  background: transparent;
+  padding: 0;
+  border-radius: var(--radius);
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .image {
+  margin: 6px;
+  border-radius: 10px;
+  -gtk-icon-filter: none;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .app-icon {
+  margin: 6px;
+  -gtk-icon-filter: none;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box .app-name {
+  color: var(--noti-app-name);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box .summary,
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box .time {
+  color: var(--noti-text);
+  font-size: 15px;
+  font-weight: 700;
+  text-shadow: none;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box .time {
+  margin-right: 30px;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .text-box .body {
+  color: var(--noti-text-muted);
+  font-size: 14px;
+  font-weight: 400;
+  text-shadow: none;
+}
+
+.notification-row progressbar,
+.notification-row trough,
+.notification-row progress {
+  min-height: 6px;
+  border-radius: var(--pill-radius);
+}
+
+.notification-row trough {
+  background: rgba(26, 0, 32, 0.12);
+}
+
+.notification-row progress {
+  background: #ff4fd8;
+}
+
+.notification-row .notification-background .notification .notification-default-action .notification-content .inline-reply .inline-reply-entry {
+  background: rgba(255, 250, 240, 0.9);
+  color: var(--noti-text);
+  caret-color: var(--noti-text);
+  border: 1px solid rgba(255, 79, 216, 0.4);
+  border-radius: 8px;
+}
+
+/* ── close button ─────────────────────────────────────────────────── */
+
+.close-button {
+  min-width: 26px;
+  min-height: 26px;
+  margin-top: 10px;
+  margin-right: 10px;
+  padding: 0;
+  background: rgba(26, 0, 32, 0.08);
+  border: 1px solid rgba(26, 0, 32, 0.18);
+  border-radius: var(--pill-radius);
+  color: var(--noti-text);
+  box-shadow: none;
+  text-shadow: none;
+}
+
+.close-button:hover {
+  background: rgba(255, 60, 142, 0.16);
+  border-color: rgba(255, 60, 142, 0.4);
+}
+
+/* ── notification actions ─────────────────────────────────────────── */
+
+.notification-row .notification-background .notification .notification-action > button,
+.widget-title > button,
+.widget-buttons-grid flowboxchild > button,
+.widget-menubar > .menu-button-bar > .widget-menubar-container button,
+.widget-mpris .widget-mpris-player .mpris-overlay > box > button,
+.widget-mpris > box > button {
+  background: rgba(255, 79, 216, 0.1);
+  border: 1px solid rgba(255, 79, 216, 0.25);
+  border-radius: 8px;
+  color: var(--noti-text);
+  box-shadow: none;
+}
+
+.notification-row .notification-background .notification .notification-action > button:hover,
+.widget-title > button:hover,
+.widget-buttons-grid flowboxchild > button:hover,
+.widget-menubar > .menu-button-bar > .widget-menubar-container button:hover,
+.widget-mpris .widget-mpris-player .mpris-overlay > box > button:hover,
+.widget-mpris > box > button:hover {
+  background: rgba(255, 79, 216, 0.2);
+  border-color: rgba(255, 79, 216, 0.45);
+}
+
+/* ── notification groups ──────────────────────────────────────────── */
+
+.notification-group {
+  transition: opacity 180ms ease-in-out;
+}
+
+.notification-group .notification-group-close-button .close-button {
+  margin: 12px 20px;
+}
+
+.notification-group .notification-group-buttons,
+.notification-group .notification-group-headers {
+  margin: 0 16px;
+  color: var(--noti-text);
+}
+
+.notification-group .notification-group-headers .notification-group-icon {
+  color: var(--noti-text);
+}
+
+.notification-group.collapsed.not-expanded {
+  opacity: 0.45;
+}
+
+/* ── control center panel ─────────────────────────────────────────── */
+
+.control-center {
+  background: var(--cc-bg);
+  color: var(--cc-text);
+  border-radius: 18px;
+  border: 1px solid var(--cc-border);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.52), 0 0 0 1px rgba(75, 108, 255, 0.1);
+}
+
+.control-center .control-center-list-placeholder {
+  opacity: 0.45;
+}
+
+.control-center .control-center-list {
+  background: transparent;
+}
+
+.control-center .control-center-list .notification-row .notification-background .notification {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.control-center .control-center-list .notification .notification-default-action:hover,
+.control-center .control-center-list .notification .notification-action:hover {
+  background: var(--noti-bg-hover);
+}
+
+/* ── control center widgets ───────────────────────────────────────── */
+
+.widget {
+  margin: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--cc-widget-bg);
+  border: 1px solid var(--cc-widget-border);
+}
+
+.widget-title > label,
+.widget-dnd label,
+.widget-label > label {
+  color: var(--cc-text);
+}
+
+.widget-title > label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-right: 8px;
+}
+
+.widget-dnd label,
+.widget-label > label {
+  font-size: 1rem;
+}
+
+.widget-dnd switch {
+  border-radius: var(--pill-radius);
+  margin-left: 8px;
+  background: rgba(75, 69, 102, 0.25);
+  border: 1px solid rgba(75, 69, 102, 0.5);
+}
+
+.widget-dnd switch:checked {
+  background: rgba(75, 108, 255, 0.85);
+  border-color: rgba(75, 108, 255, 0.6);
+}
+
+.widget-dnd switch slider {
+  border-radius: var(--pill-radius);
+  background: #3cfaff;
+}
+
+.widget-buttons-grid flowboxchild > button.toggle:checked {
+  background: rgba(75, 108, 255, 0.28);
+  border-color: rgba(75, 108, 255, 0.52);
+}
+
+/* ── mpris widget ─────────────────────────────────────────────────── */
+
+:root {
+  --mpris-album-art-overlay: rgba(11, 10, 16, 0.65);
+  --mpris-album-art-shadow: 0 0 18px rgba(0, 0, 0, 0.7);
+  --mpris-album-art-icon-size: 96px;
+}
+
+.widget-mpris {
+  padding: 0;
+}
+
+.widget-mpris .widget-mpris-player {
+  margin: 12px 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--mpris-album-art-shadow);
+  overflow: hidden;
+}
+
+.widget-mpris .widget-mpris-player .mpris-background {
+  filter: blur(12px);
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay {
+  padding: 14px;
+  background-color: var(--mpris-album-art-overlay);
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-album-art {
+  border-radius: 12px;
+  box-shadow: var(--mpris-album-art-shadow);
+  -gtk-icon-size: var(--mpris-album-art-icon-size);
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-title {
+  color: var(--cc-text);
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.widget-mpris .widget-mpris-player .mpris-overlay .widget-mpris-subtitle {
+  color: var(--cc-text);
+  font-size: 1rem;
+  opacity: 0.82;
+}
+
+/*  ,-----. ,--.   ,--.     ,--.       ,--.          ,--. */
+/* '  .-.  '|  | ,-|  |     |  | ,---. |  |-.  ,---. |  |-.  ,---. */
+/* |  | |  ||  |' .-. |,--. |  || .-. || .-. '| .-. || .-. '| .-. | */
+/* '  '-'  '|  |\ `-' ||  '-'  /' '-' '| `-' |' '-' '| `-' |' '-' ' */
+/*  `-----' `--' `---'  `-----'  `---'  `---'  `---'  `---'  `---' */

@@ -1,0 +1,193 @@
+/* ██╗  ██╗██╗██╗     ██╗     ███████╗██████╗ */
+/* ██║ ██╔╝██║██║     ██║     ██╔════╝██╔══██╗ */
+/* █████╔╝ ██║██║     ██║     █████╗  ██████╔╝ */
+/* ██╔═██╗ ██║██║     ██║     ██╔══╝  ██╔══██╗ */
+/* ██║  ██╗██║███████╗███████╗███████╗██║  ██║ */
+/* ╚═╝  ╚═╝╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝ */
+/*  */
+/* ██╗  ██╗██╗      ██████╗ ██╗    ██╗███╗   ██╗███████╗ */
+/* ██║ ██╔╝██║     ██╔═══██╗██║    ██║████╗  ██║╚══███╔╝ */
+/* █████╔╝ ██║     ██║   ██║██║ █╗ ██║██╔██╗ ██║  ███╔╝ */
+/* ██╔═██╗ ██║     ██║   ██║██║███╗██║██║╚██╗██║ ███╔╝ */
+/* ██║  ██╗███████╗╚██████╔╝╚███╔███╔╝██║ ╚████║███████╗ */
+/* ╚═╝  ╚═╝╚══════╝ ╚═════╝  ╚══╝╚══╝ ╚═╝  ╚═══╝╚══════╝ */
+
+
+/* === Killer Klownz — Cotton Candy Portal Walker ======================= */
+
+@define-color text         #1a0020;   /* void purple — on pink */
+@define-color foreground   #1a0020;
+@define-color base         #f5c2e7;   /* cotton candy pink */
+@define-color background   #f5c2e7;
+@define-color border       #b96bff;   /* alien purple */
+@define-color selected-box #1a0020;   /* void tears through the candy */
+@define-color selected-border #ff4fd8; /* magenta edge */
+@define-color selected-text #3cfaff;  /* alien cyan — readable on void bg */
+
+/* ── Outer window: transparent, faint pink atmospheric halo ─────────── */
+window {
+  background-color: transparent;
+  background-image: radial-gradient(circle at center,
+    rgba(245, 194, 231, 0.14) 0%,
+    rgba(185, 107, 255, 0.06) 45%,
+    rgba(0, 0, 0, 0.0) 72%);
+}
+
+/* ── Panel: the cotton candy portal object ──────────────────────────── */
+window .box-wrapper {
+  border-radius: 14px;
+  border: 3px solid @border;
+  padding: 20px 18px 18px;
+  background: radial-gradient(ellipse at 50% 0%,
+    rgba(252, 232, 245, 1.0) 0%,
+    rgba(245, 194, 231, 1.0) 45%,
+    rgba(235, 175, 220, 1.0) 100%);
+  box-shadow:
+    0 0 28px rgba(185, 107, 255, 0.40),
+    0 0 72px rgba(255, 79, 216, 0.14),
+    0 28px 60px rgba(11, 10, 16, 0.70);
+}
+
+/* ── Search field ───────────────────────────────────────────────────── */
+window .search-container,
+box.search-container,
+.search-container {
+  background: transparent;
+  background-color: transparent;
+  background-image: none !important;
+  border: none;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0 0 10px 0;
+}
+
+#entry {
+  background: transparent;
+  background-color: transparent;
+  background-image: none !important;
+  border: none;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0;
+}
+
+#entry entry,
+.input {
+  background-color: rgba(255, 255, 255, 0.30);
+  background-image: none !important;
+  color: @text;
+  border-radius: 8px;
+  padding: 10px 14px;
+  border: 1px solid rgba(185, 107, 255, 0.45);
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Kill GTK default halos and highlights on the search entry */
+#entry * {
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+window .box-wrapper #entry,
+window .box-wrapper #entry * {
+  background: transparent;
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  border: none;
+  outline: none;
+}
+
+#entry:selected {
+  color: @foreground;
+}
+
+entry text,
+entry selection {
+  background: none !important;
+  background-image: none !important;
+  color: @text;
+}
+
+/* ── Result list ────────────────────────────────────────────────────── */
+.list {
+  padding: 0;
+}
+
+/* Row outer container */
+child {
+  padding: 2px 0;
+}
+
+/* Item inner box — left strip is always present, color transitions */
+child .item-box {
+  border-radius: 7px;
+  background: transparent;
+  padding: 2px 10px;
+  border-left: 4px solid transparent;
+}
+
+/* Hover — void starts bleeding through */
+child:hover .item-box {
+  background-color: rgba(26, 0, 32, 0.10);
+  border-left-color: rgba(185, 107, 255, 0.50);
+}
+
+/* Selected — the void takes over */
+child:selected .item-box {
+  background-color: @selected-box;
+  border-left-color: @selected-border;
+  box-shadow: inset 0 0 12px rgba(255, 79, 216, 0.12);
+}
+
+/* Row text: default void purple on pink */
+child .item-text {
+  color: @text;
+}
+
+/* Hover text: stays dark */
+child:hover .item-text {
+  color: @text;
+}
+
+/* Selected text: alien cyan on the void bg */
+child:selected .item-text {
+  color: @selected-text;
+}
+
+/* ── Keybinding hints ───────────────────────────────────────────────── */
+
+/* Hint bar — sits at the foot of the panel, separated by a purple hairline */
+.keybind-hints {
+  border-top: 1px solid rgba(185, 107, 255, 0.30);
+  padding: 7px 10px 4px;
+  margin-top: 8px;
+}
+
+/* Hint groups — muted void purple text between the key badges */
+.global-keybinds,
+.item-keybinds {
+  color: rgba(26, 0, 32, 0.45);
+  spacing: 6px;
+}
+
+/* Key badge — looks like a key cap stamped in void purple on pink */
+.global-keybinds label,
+.item-keybinds label {
+  background: rgba(26, 0, 32, 0.08);
+  color: #1a0020;
+  border: 1px solid rgba(185, 107, 255, 0.55);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-size: 11px;
+  font-family: monospace;
+  font-weight: 600;
+}
+
+/*  ,-----. ,--.   ,--.     ,--.       ,--.          ,--. */
+/* '  .-.  '|  | ,-|  |     |  | ,---. |  |-.  ,---. |  |-.  ,---. */
+/* |  | |  ||  |' .-. |,--. |  || .-. || .-. '| .-. || .-. '| .-. | */
+/* '  '-'  '|  |\ `-' ||  '-'  /' '-' '| `-' |' '-' '| `-' |' '-' ' */
+/*  `-----' `--' `---'  `-----'  `---'  `---'  `---'  `---'  `---' */

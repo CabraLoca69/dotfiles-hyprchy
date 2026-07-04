@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -e
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMMON_DIR="$DOTFILES_DIR/common"
+HOSTNAME_ID="$(hostnamectl --static 2>/dev/null || hostname)"
+HOST_DIR="$DOTFILES_DIR/hosts/$HOSTNAME_ID"
+MERGED_DIR="$DOTFILES_DIR/merged"
+
+echo "[+] Reconstruyendo merged/ para host '$HOSTNAME_ID'"
+
+# Mirror completo de common/ (--delete: si borraste algo de common/, desaparece acá también)
+mkdir -p "$MERGED_DIR"
+rsync -a --delete "$COMMON_DIR"/ "$MERGED_DIR"/
+
+# Overlay del host ENCIMA (sin --delete: solo agrega/pisa, nunca borra lo de common/)
+if [ -d "$HOST_DIR" ]; then
+    rsync -a "$HOST_DIR"/ "$MERGED_DIR"/
+    echo "[+] Override de '$HOSTNAME_ID' aplicado encima."
+else
+    echo "[!] No hay hosts/$HOSTNAME_ID/ — merged/ es igual a common/."
+fi
+
+echo "[+] merged/ listo en $MERGED_DIR"
