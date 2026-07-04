@@ -99,12 +99,26 @@ sea que se haya lanzado. `--atomic-bin` symlinkea `~/.local/bin/*` y
 Es una foto fija — si agregás un script nuevo después, hay que volver a correrlo (o symlinkealo
 a mano). No reemplaza a `~/.config/uwsm/env`, es el parche de "necesito que ande ya".
 
-## Symlinks: qué se symlinkea y por qué algunos necesitan un paso extra
+## Cómo se arman los symlinks: `merged/`
 
-`create_symlinks()` en `install-hyprchy` symlinkea en bloque todo `.config/*/`, `.local/share/*/`
-y `.local/bin/*` del repo hacia `$HOME`. Eso cubre la gran mayoría, pero **tres cosas viven dentro
-de esos árboles y necesitan un symlink adicional propio**, porque el programa que los consume
-busca en un lugar fijo del sistema, no dentro de tu `$HOME/.local/share/omarchy/`:
+`common/` + `hosts/<hostname>/` **no se symlinkean directo a `$HOME`**. Antes de eso,
+`build-merged` los combina en una carpeta generada, `merged/` (gitignoreada, no vive en el
+repo):
+
+1. `rsync -a --delete common/ merged/` — espejo completo de lo compartido.
+2. `rsync -a hosts/<hostname>/ merged/` **encima**, sin `--delete` — solo agrega/pisa lo puntual
+   de esta máquina, nunca borra lo de `common/`.
+
+Recién con `merged/` ya resuelto, `install-hyprchy` symlinkea hacia `$HOME`, **recursivo y
+directorio por directorio**: si `~/.config/hypr` no existe todavía (o ya era un symlink nuestro
+de antes), lo symlinkea entero de una — un solo link, `ls` limpio. Si en cambio ya hay contenido
+real ahí (por ejemplo `~/.config` casi seguro tiene carpetas de otras apps que no son del repo),
+baja un nivel más y repite el chequeo adentro. Resultado: todo lo que no tiene mezcla con cosas
+ajenas al repo queda como un solo symlink de carpeta; solo se "abre" recursivamente donde hace
+falta.
+
+Tres cosas puntuales, además, necesitan un symlink extra propio porque el programa que los
+consume busca en un lugar fijo del sistema, no dentro del árbol de `merged/`:
 
 | Qué | Vive en (repo) | Necesita estar en | Función que lo hace |
 |---|---|---|---|
@@ -118,20 +132,54 @@ partir de ahí — sin el `.desktop` en ese path exacto, la unidad nunca existe 
 `omarchy-restart-walker` falla con *"Unable to restart Walker -- RESTART MANUALLY"*.
 
 `elephant` no se symlinkea porque no viene con un `.service` fijo en el repo — trae su propio
-subcomando (`elephant service enable`) que genera y habilita su unidad. Es el único caso de los
-tres que es un comando, no un symlink.
+subcomando (`elephant service enable`) que genera y habilita su unidad.
 
-## Temas y git
+### Editar la config después de instalado
 
-Omarchy aplica temas creando `~/.config/omarchy/current/theme` como **symlink** apuntando al tema
-activo (`~/.config/omarchy/themes/<nombre>/`). Un repo de git que solo trae la estructura de
-selector de temas pero **ningún tema real adentro** deja ese symlink apuntando a nada en una
-instalación limpia — hasta que alguien elige un tema activamente, cosas que dependen de
-`current/theme` (walker, entre otras) quedan rotas o transparentes.
+Como lo que queda symlinkeado en `$HOME` apunta a `merged/` (no al repo directo), los cambios que
+hagas ahí **no se reflejan solos en git**. Flujo de edición:
 
-**Este repo incluye al menos un tema completo** para evitar ese estado roto en el primer arranque.
-Si agregás temas nuevos, asegurate de que el que quede como default en `current/theme` sea uno
-real, versionado en el repo — no solo el symlink apuntando a un directorio vacío.
+```bash
+# editás lo que necesites, directo en ~/.config/... (símlinks a merged/) o en merged/ mismo
+./sync-to-repo
+```
+
+`sync-to-repo` recorre `merged/` y decide dónde va cada archivo:
+
+- Si ya existía como override de este host → se actualiza en `hosts/<hostname>/`.
+- Si ya existía como compartido → se actualiza en `common/`.
+- Si es un archivo **nuevo** (no existía en ninguno de los dos) → **te pregunta** si va a
+  `common/` (compartido con todas las máquinas) o a `hosts/<hostname>/` (solo esta), sin asumir
+  default.
+
+Al final, reporta como **huérfanos** los archivos que están en el repo pero ya no en `merged/`
+(los borraste) — nunca los borra solo del repo, es un aviso para que decidas vos si el borrado
+fue intencional y quieras `git rm` a mano.
+
+Corré `git status` después de `sync-to-repo` como de costumbre, antes de comitear.
+
+## Temas: `current/theme` no vive en git
+
+`~/.config/omarchy/current/theme/` (y de ahí, `mako.ini`, los paths de `waybar/themes/`,
+`walker/themes/`, etc.) es **estado runtime derivado**, no un dotfile — lo genera el theme
+switcher (`theme-manager set <tema> ...`) a partir de los temas base reales. Intentar versionarlo
+en git como symlink terminaba rompiéndose (git no trackea bien un `git add` que atraviesa un
+symlink intermedio), así que directamente **no se versiona**:
+
+- El symlink fijo `~/.config/mako/config → ~/.config/omarchy/current/theme/mako.ini` lo recrea
+  siempre `repair_internal_symlinks()` en cada corrida de `install-hyprchy` — no depende de git
+  para nada, es una relación fija sin importar qué tema esté activo.
+- El *contenido* de `current/theme/` (y de rebote ese `mako.ini`) lo genera
+  `set_default_theme()`, que corre `theme-manager set "$DEFAULT_THEME" -w -k --hyprlock -q` una
+  vez al final de la instalación. `DEFAULT_THEME` está en `install-hyprchy` como variable a
+  definir — ⚠️ **si queda vacía, el instalador avisa y salteá este paso**, dejando el symlink de
+  mako roto hasta que corras el `set` a mano.
+- Los **temas base reales** (los `.toml`/carpetas que sí se editan a mano y sí van al repo) viven
+  en `common/.local/share/omarchy/themes/<nombre>/` como siempre.
+
+`verify_theme_symlinks()` corre al final del instalador y avisa si `~/.config/mako/config` quedó
+roto, para no descubrirlo recién cuando falla una notificación.
+
 
 ## Terminal default para `xdg-terminal-exec`
 
@@ -179,50 +227,46 @@ sistema en el momento de instalarlo, así que no tiene ese problema.
 Este repo se usa en más de una máquina (PC de escritorio, notebook), cada una con su propia
 config de monitores, y un par de scripts que leen paths de hardware hardcodeados
 (`waybar-cpu-watts`, `waybar-gpu` — hwmon es distinto por equipo). En vez de ramas de git
-separadas por máquina (que obligan a propagar a mano cada fix común a todas, con riesgo de
-que una máquina se quede desactualizada sin que te des cuenta), la config vive en una sola
-rama, separada en dos árboles:
-
-```
+separadas por máquina, la config vive en una sola rama, separada en dos árboles:
 common/                    # compartido entre TODAS las máquinas
 ├── .config/hypr/hyprland.lua, helpers.lua, bindings.lua, ...
 └── .local/bin/, .local/share/omarchy/, ...
-
 hosts/
-├── cloca-not/              # overrides SOLO para esta máquina (notebook)
+├── not-cloca/              # overrides SOLO para esta máquina (notebook)
 │   └── .config/hypr/monitors.lua
-└── cloca-pc/                # overrides SOLO para esta máquina (PC)
-    ├── .config/hypr/monitors.lua
-    ├── .local/bin/waybar-cpu-watts
-    └── .local/bin/waybar-gpu
-```
+└── pc-cloca/                # overrides SOLO para esta máquina (PC)
+├── .config/hypr/monitors.lua
+├── .local/bin/waybar-cpu-watts
+└── .local/bin/waybar-gpu
 
-`install-hyprchy` detecta el hostname (`hostnamectl --static`) y symlinkea **archivo por
-archivo** (no directorio por directorio) primero todo `common/`, y después, si existe,
-`hosts/<hostname>/` encima. Como es a nivel archivo individual, un host puede overridear **un
-solo archivo** (por ejemplo `monitors.lua`) sin duplicar el resto de la carpeta que lo contiene
-— todo lo demás en `.config/hypr/` sigue viniendo de `common/`.
+`install-hyprchy` corre `build-merged` primero (detecta el hostname con `hostnamectl --static`,
+combina `common/` + `hosts/<hostname>/` en `merged/`), y symlinkea desde ahí — ver la sección
+anterior para el detalle de cómo se decide directorio-entero-symlinkeado vs. bajar un nivel.
 
 Si una máquina nueva no tiene carpeta en `hosts/`, el instalador avisa pero no falla — usa
-`common/` solo, y vos agregás `hosts/<hostname-nuevo>/` con lo puntual que haga falta cuando
-lo necesites.
+`common/` solo. Para agregar overrides de una máquina nueva, lo más simple es editar directo
+sobre `~/.config/...` (que apunta a `merged/`) y correr `./sync-to-repo` — te va a preguntar
+dónde va cada archivo nuevo.
 
-⚠️ Este esquema permite *agregar/reemplazar* archivos por host, pero no *excluir* uno que
-exista en `common/` (no hay forma de decir "en esta máquina, este archivo de común no va"). Si
-en algún momento hace falta eso, hay que agregarle al script una lista de exclusión — no
-implementado todavía porque no hizo falta.
+⚠️ Este esquema permite *agregar/reemplazar* archivos por host, pero no *excluir* uno que exista
+en `common/` (no hay forma de decir "en esta máquina, este archivo de común no va"). Si hace
+falta eso, hay que agregarle al script una lista de exclusión — no implementado todavía.
 
 ## Estructura del repo
 
 ```
 install-all                 # orquesta los 3 pasos de instalación
-install-hyprchy               # paru, deps, PATH, symlinks (common+hosts), systemd units, walker/elephant
+install-hyprchy               # paru, deps, PATH, build-merged + symlinks, systemd units, walker/elephant, tema default
 install-drivers                # CPU/GPU (microcode, mesa/vulkan/nvidia, bootloader)
 bootstrap-system                 # multilib, servicios, grupos, keyring, display manager
-dependencies                       # PACMAN_DEPS / AUR_DEPS / CACHYOS_DEPS
-common/                              # dotfiles compartidos, symlinkeados siempre
-hosts/<hostname>/                      # overrides puntuales por máquina, symlinkeados encima
-```
+build-merged                    # combina common/ + hosts/<hostname>/ -> merged/ (gitignoreado)
+sync-to-repo                     # baja cambios editados en merged/ de vuelta al repo (common/ o hosts/)
+dependencies                           # PACMAN_DEPS / AUR_DEPS / CACHYOS_DEPS
+common/                                  # dotfiles compartidos
+hosts/<hostname>/                          # overrides puntuales por máquina
+merged/                                      # GENERADO, gitignoreado — no editar el repo acá directo pensando que persiste solo con git
+`````
+
 
 ## Troubleshooting rápido
 
@@ -277,7 +321,17 @@ No se automatizó en el instalador a propósito — borrar conexiones de Network
 podría romper perfiles wifi que ya andaban bien en una instalación existente. Con Ethernet no
 debería pasar, no hay handshake de iwd/NetworkManager de por medio.
 
+**Cambié algo en `~/.config/...` y no aparece en `git status`** — estás editando `merged/` (o un
+symlink que apunta ahí), que está gitignoreado a propósito. Corré `./sync-to-repo` para bajar
+el cambio a `common/` o `hosts/<hostname>/` según corresponda.
 
+**mako no arranca / `Unable to parse configuration file`** — `~/.config/mako/config` quedó
+apuntando a un `current/theme/mako.ini` que no existe. Definí `DEFAULT_THEME` en
+`install-hyprchy` y corré `theme-manager set "$DEFAULT_THEME" -w -k --hyprlock` a mano, o
+volvé a correr `./install-hyprchy` si ya lo definiste.
+
+
+**activar/desactivar autologin**
 
 Para activar autologin (se hace automatico en system-bootstrap): 
 
@@ -291,3 +345,6 @@ EOF
 
 Posteriormente se puede configurar el hyprlock para que bloquee la pantalla, ambos tienen temas 
 asi que es cuestion de elegir nomas.
+
+Para desactivarlo se puede eliminar el archivo o borrar su contenido, cada vez que enciendas vas 
+a ver el login de tu display manager

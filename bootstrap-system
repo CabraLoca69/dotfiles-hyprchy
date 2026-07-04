@@ -18,8 +18,8 @@ MANUAL_NOTES=()
 
 ask_yes_no() {
     local answer
-    read -rp "$(echo -e "${YELLOW}?${NC} $1 [s/N]: ")" answer
-    [[ "$answer" =~ ^[sSyY]$ ]]
+    read -rp "$(echo -e "${YELLOW}?${NC} $1 [S/n]: ")" answer
+    [[ -z "$answer" || "$answer" =~ ^[sSyY]$ ]]
 }
 
 install_pkgs() {
