@@ -327,7 +327,7 @@ el cambio a `common/` o `hosts/<hostname>/` según corresponda.
 
 **mako no arranca / `Unable to parse configuration file`** — `~/.config/mako/config` quedó
 apuntando a un `current/theme/mako.ini` que no existe. Definí `DEFAULT_THEME` en
-`install-hyprchy` y corré `theme-manager set "$DEFAULT_THEME" -w -k --hyprlock` a mano, o
+`install-hyprchy` y corré `theme-manager set <nombre tema> -w -k --hyprlock` a mano, o
 volvé a correr `./install-hyprchy` si ya lo definiste.
 
 
