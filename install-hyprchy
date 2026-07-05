@@ -401,10 +401,18 @@ set_default_theme() {
         return
     fi
 
-    theme-manager set "$DEFAULT_THEME" -k --hyprlock -q
-    theme-manager waybar event-horizon
+    theme-manager set "$DEFAULT_THEME" -q
+    theme-manager waybar event-horizon -q
     info "Tema '$DEFAULT_THEME' aplicado (waybar, walker, hyprlock, mako)."
 }
+
+#crear dir merged:
+create_merged_dir(){   
+    chmod +x $DOTFILES_DIR/build-merged
+    "$DOTFILES_DIR/build-merged"
+}
+
+
 # ──────────────────────────────────────────────
 # Avisos post-instalación
 # ──────────────────────────────────────────────
@@ -457,7 +465,7 @@ main() {
     setup_path
     setup_uwsm_env
     setup_xdg_terminal
-    "$DOTFILES_DIR/build-merged"
+    create_merged_dir
     create_symlinks
     repair_internal_symlinks
     symlink_systemd_units

@@ -76,7 +76,7 @@ setup_display_manager() {
         info "sddm ya está instalado, falta habilitarlo."
     fi
 
-    sudo systemctl enable --now sddm.service
+    sudo systemctl enable sddm.service
     info "sddm habilitado. Con el próximo reinicio deberías ver la pantalla de login."
 
     # Verificamos que exista al menos una sesión Wayland para que sddm tenga qué mostrar

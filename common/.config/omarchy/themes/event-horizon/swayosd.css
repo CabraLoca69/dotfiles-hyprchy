@@ -16,9 +16,9 @@
 
 
 @define-color background-color #1c1e26;
-@define-color border-color #26bbd9;
-@define-color label #fadad1;
-@define-color image #fadad1;
+@define-color border-color #59e3e3;
+@define-color label #f075b5;
+@define-color image #f075b5;
 @define-color progress #fab795;
 
 /* Cancel out Omarchy settings */
@@ -32,18 +32,16 @@ window:backdrop {
     padding: 0px;
 }
 
-
 /* Draw a new background */
 window:not(:backdrop) #container,
 window:backdrop #container {
     border: 3px solid @border-color;
     border-radius: 16px;
-    background-color: @background-color;
+    background-color: alpha(@background-color, 0.85);
     padding: 12px;
     background-clip: padding-box;
     box-shadow: 2px 2px 9px 0px rgba(0, 0, 0, 0.8);
 }
-
 /*
 * _______/\\\\\_______/\\\\\\____________/\\\__                                                  
 *   _____/\\\///\\\____\////\\\___________\/\\\__                                                 

@@ -2,20 +2,30 @@
 -- Source: /home/oldjobobo/Projects/themes/omarchy-event-horizon-theme/hyprland.conf
 
 local activeBorderColor = {
-	colors = { "rgb(59e3e3)", "rgb(59e3e3)", "rgb(26bbd9)", "rgb(26bbd9)", "rgb(29d398)", "rgb(29d398)" },
+  colors = {
+    "rgba(e95678ff)",  -- color1, rosa/rojo
+    "rgba(ee64acff)",  -- color5, magenta
+    "rgba(26bbd9ff)",  -- accent, cyan/azul
+    "rgba(59e3e3ff)",  -- color6, cyan claro
+    "rgba(29d398ff)",  -- color2, verde agua
+    "rgba(fab795ff)",  -- color3, naranja
+    "rgba(e95678ff)",  -- cierra el loop en el mismo color inicial
+  },
+  angle = 45,
 }
-local inactiveBorderColor = "rgba(59e3e355)"
+
+local inactiveBorderColor = "rgba(1c1e2666)"  -- background con alpha, apagado
 
 hl.config({
 	general = {
-		col = {
-			active_border = activeBorderColor,
-			inactive_border = inactiveBorderColor,
-		},
-		border_size = 2,
-		gaps_in = 2,
-		gaps_out = 8,
-	},
+    	col = {
+      	active_border = activeBorderColor,
+      	inactive_border = inactiveBorderColor,
+    	},
+    	border_size = 2,
+    	gaps_in = 2,
+    	gaps_out = 8,
+  		},
 	group = {
 		col = {
 			border_active = activeBorderColor,
