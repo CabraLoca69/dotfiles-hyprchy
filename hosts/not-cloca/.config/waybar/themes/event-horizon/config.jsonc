@@ -47,7 +47,7 @@
   ]
   },
 
-     "group/right3": {
+    "group/right3": {
     "orientation": "inherit",
     "modules" :[
     "bluetooth",
@@ -248,8 +248,8 @@
         "󰂅"
       ],
       "default": [
-        "󰁺",<
-
+        "󰁺",
+        "󰁻",
         "󰁻",
         "󰁼",
         "󰁽",

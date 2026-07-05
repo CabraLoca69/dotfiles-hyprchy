@@ -57,7 +57,7 @@
   border: 1px solid alpha(@text, 0.15);
 }
 
-#right2{
+#right3{
   margin-left: 8px;
   background-color: @base;
   border-radius: 8px;

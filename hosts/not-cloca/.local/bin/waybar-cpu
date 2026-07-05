@@ -19,3 +19,7 @@ else
     CLASS="low"
 fi
 echo "{\"text\": \"${CPU_PCT}% 󰍛\", \"class\": \"${CLASS}\", \"tooltip\": \"Freq: ${FREQ} MHz\nTemp: ${TEMP}°C\"}"
+
+#si la temperatura no aparece:
+#for i in /sys/class/hwmon/hwmon*/name; do echo "$i: $(cat $i)"; done
+#buscar core temp y reemplazar el numero en TEMP
