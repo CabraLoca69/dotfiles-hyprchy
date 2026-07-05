@@ -9,6 +9,7 @@
 
 PACMAN_DEPS=(
     # Hyprland y compositor
+    uwsm
     hyprland
     hyprlock
     hypridle
@@ -18,7 +19,6 @@ PACMAN_DEPS=(
     xdg-desktop-portal-gtk
     qt5-wayland
     qt6-wayland
-    uwsm
     kitty
 
     # Waybar y notificaciones
