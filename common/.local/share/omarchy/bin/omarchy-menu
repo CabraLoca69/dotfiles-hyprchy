@@ -162,7 +162,7 @@ go_to_menu() {
   *toggle*) show_toggle_menu ;;
   *style*) show_style_menu ;;
   *config*) show_setup_config_menu ;;
-  *update*) omarchy-launch-or-focus -f -d -t "Update" "paru -Syu";; #ojo con esto
+  *update*) omarchy-launch-or-focus -f -d -t "Update" omarchy-update-system-pkgs;; 
   *about*) show_about ;;
   *system*) show_system_menu ;;
   esac

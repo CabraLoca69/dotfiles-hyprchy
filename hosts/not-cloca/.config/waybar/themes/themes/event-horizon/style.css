@@ -57,6 +57,13 @@
   border: 1px solid alpha(@text, 0.15);
 }
 
+#right2{
+  margin-left: 8px;
+  background-color: @base;
+  border-radius: 8px;
+  border: 1px solid alpha(@text, 0.15);
+}
+
 window#waybar.empty #window {
   background: transparent;
   background-color: transparent;
@@ -104,7 +111,7 @@ tooltip {
 }
 
 #workspaces button.active {
-    color: @love;
+    color: #26bbd9;
     opacity: 1;
 }
 
@@ -138,6 +145,7 @@ tooltip {
 #custom-notification-silencing-indicator,
 #custom-omarchy,
 #custom-screenrecording-indicator,
+
 #custom-updatespacman {
   min-width: 16px;
   margin: 1px 3px 1px 3px;
@@ -154,25 +162,80 @@ tooltip {
 #custom-omarchy {
   border-radius: 0;
   border-right: 1px solid alpha(@text, 0.15);
-  color: @gold;
+  color: #ee64ac;
   font-size: 14px;
 }
 
 #clock {
   border-radius: 0;
   border-right: 1px solid alpha(@text, 0.15);
-  color: @gold;
+  color: #ee64ac;
 }
 
 #bluetooth {
   border-radius: 0;
   border-right: 1px solid alpha(@text, 0.15);
-  color: @foam;
+  color: #26bbd9;
 }
 
 #memory {
   border-radius: 0;
   border-left: 1px solid alpha(@text, 0.15);
+  color: #24e46e;
+}
+
+
+#memory.loaded {
+  color: #29d398; 
+}
+#memory.warning {
+  color: #26bbd9; 
+}
+#memory.critical {
+  color: #ee64ac; 
+}
+
+
+#custom-cpu.low {
+  color: #3fdaa4; 
+}
+#custom-cpu.medium {
+  color: #fab795; 
+}
+#custom-cpu.high {
+  color: #e95678; 
+}
+
+
+#custom-battery.loaded {
+  color: #3190cb;
+}
+#custom-battery.mid {
+  color: #59e3e3;
+}
+#custom-battery.warning {
+  color: #ff00c8;
+}
+#custom-battery.critical {
+  color: #ff003c;
+  animation: blink 1s infinite alternate;
+}
+#custom-battery.charging {
+  color: #00ff9d;
+}
+
+@keyframes blink {
+    to {
+        color: #6600ff;
+    }
+}
+
+#custom-cpu {
+    padding: 0 6px;
+}
+
+#custom-battery {
+    padding: 0 6px;
 }
 
 #cpu {
@@ -184,19 +247,16 @@ tooltip {
 }
 
 #backlight {
-  color: @foam;
+  color: #26bbd9;
 }
 
-#memory {
-  color: @gold;
-}
 
 #network {
-  color: @rose;
+  color: #ee64ac;
 }
 
 #pulseaudio {
-  color: @love;
+  color: #ee64ac;
 }
 
 #idle_inhibitor {
@@ -276,4 +336,5 @@ tooltip label {
         color: @background;
     }
 }
+
 

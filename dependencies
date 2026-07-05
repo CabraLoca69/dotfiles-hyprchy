@@ -53,6 +53,11 @@ PACMAN_DEPS=(
     calcurse
     bluetui
     impala
+    chafa
+    jq
+    brightnessctl
+    swayosd
+    wiremix 
 
     # Fuentes
     noto-fonts

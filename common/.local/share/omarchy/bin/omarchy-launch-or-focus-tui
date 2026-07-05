@@ -6,4 +6,4 @@
 APP_ID="org.omarchy.$(basename "$1")"
 LAUNCH_COMMAND="omarchy-launch-tui $@"
 
-exec omarchy-launch-or-focus "$APP_ID" "$LAUNCH_COMMAND"
+exec omarchy-launch-or-focus -f -t "$APP_ID" "$LAUNCH_COMMAND"

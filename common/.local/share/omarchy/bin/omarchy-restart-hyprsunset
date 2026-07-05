@@ -4,5 +4,5 @@
 if pgrep -f "hyprsunset_daynight" > /dev/null; then
     pkill -f "hyprsunset_daynight"
     sleep 2
-    bash ~/.local/bin/hyprsunset_daynight.sh &
+    bash ~/.local/bin/hyprsunset_daynight &
 fi

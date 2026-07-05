@@ -1,0 +1,36 @@
+#!/bin/bash
+BATTERY=$(ls /sys/class/power_supply/ | grep -m1 BAT)
+CAPACITY=$(cat /sys/class/power_supply/$BATTERY/capacity)
+STATUS=$(cat /sys/class/power_supply/$BATTERY/status)
+
+# Iconos 
+ICONS_DEFAULT=("󰁺" "󰁻" "󰁼" "󰁽" "󰁾" "󰁿" "󰂀" "󰂁" "󰂂" "󰁹")
+ICONS_CHARGING=("󰢜" "󰂆" "󰂇" "󰂈" "󰢝" "󰂉" "󰢞" "󰂊" "󰂋" "󰂅")
+
+IDX=$(( CAPACITY / 10 ))
+if [ "$IDX" -gt 9 ]; then IDX=9; fi
+
+if [ "$STATUS" = "Charging" ]; then
+    ICON="${ICONS_CHARGING[$IDX]}"
+    CLASS="charging"
+elif [ "$STATUS" = "Full" ] || [ "$CAPACITY" -ge 90 ]; then
+    ICON="${ICONS_DEFAULT[$IDX]}"
+    CLASS="loaded"
+elif [ "$CAPACITY" -ge 60 ]; then
+    ICON="${ICONS_DEFAULT[$IDX]}"
+    CLASS="mid"
+elif [ "$CAPACITY" -ge 30 ]; then
+    ICON="${ICONS_DEFAULT[$IDX]}"
+    CLASS="warning"
+else
+    ICON="${ICONS_DEFAULT[$IDX]}"
+    CLASS="critical"
+fi
+
+if [ "$STATUS" = "Charging" ] || [ "$STATUS" = "Full" ]; then
+    TEXT="${ICON}"
+else
+    TEXT="${CAPACITY}% ${ICON}"
+fi
+
+echo "{\"text\": \"${TEXT}\", \"class\": \"${CLASS}\", \"tooltip\": \"Batería: ${CAPACITY}% (${STATUS})\"}"

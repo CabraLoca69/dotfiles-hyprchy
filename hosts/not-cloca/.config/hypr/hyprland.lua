@@ -52,6 +52,7 @@ hl.window_rule({
 hl.window_rule({
   match = {initial_title = "Terminal"}, 
   tag = '-floating-window*',
+  opacity = "0.9 0.8"
   size = {900, 600}
 })
 

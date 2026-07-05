@@ -228,9 +228,11 @@ Este repo se usa en más de una máquina (PC de escritorio, notebook), cada una 
 config de monitores, y un par de scripts que leen paths de hardware hardcodeados
 (`waybar-cpu-watts`, `waybar-gpu` — hwmon es distinto por equipo). En vez de ramas de git
 separadas por máquina, la config vive en una sola rama, separada en dos árboles:
+
 common/                    # compartido entre TODAS las máquinas
 ├── .config/hypr/hyprland.lua, helpers.lua, bindings.lua, ...
 └── .local/bin/, .local/share/omarchy/, ...
+
 hosts/
 ├── not-cloca/              # overrides SOLO para esta máquina (notebook)
 │   └── .config/hypr/monitors.lua
@@ -275,6 +277,8 @@ hiciste logout/login completo después de tocarlo. Mientras tanto: `./install-hy
 
 **Walker no aplica tema / queda transparente** — revisá que `~/.config/omarchy/current/theme`
 resuelva a un tema real (`readlink -f ~/.config/omarchy/current/theme`), no a un symlink roto.
+Ademas config.toml debe existir, o al menos estar symlinkeado en el directorio .config/walker,
+aunque el instalador deberia cubrir ese caso especifico.
 
 **`omarchy-restart-walker` falla con "Unable to restart Walker"** — falta
 `~/.config/autostart/walker.desktop`. Correr `./install-hyprchy` de nuevo (es idempotente, lo
