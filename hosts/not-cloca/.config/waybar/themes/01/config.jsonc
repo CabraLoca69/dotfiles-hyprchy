@@ -70,7 +70,7 @@
   },
     "custom/update": {
     "format": "",
-    "on-click": "omarchy-launch-floating-terminal -f -d -t 'Update' paru -Syu",
+    "on-click": "omarchy-update-system-pkgs",
     "tooltip-format": "Omarchy update available"
   },
     "backlight": {
