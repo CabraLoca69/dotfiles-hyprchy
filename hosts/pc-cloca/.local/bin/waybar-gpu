@@ -1,8 +1,19 @@
 #!/bin/bash
-GPU_HWMON=$(grep -l amdgpu /sys/class/hwmon/hwmon*/name | head -1 | xargs dirname)
+CACHE=/tmp/waybar-gpu-paths
+
+if [ -f "$CACHE" ]; then
+    source "$CACHE"
+fi
+
+if [ -z "$GPU_HWMON" ] || [ ! -d "$GPU_HWMON" ]; then
+    GPU_HWMON=$(grep -l amdgpu /sys/class/hwmon/hwmon*/name | head -1 | xargs dirname)
+    echo "GPU_HWMON=\"$GPU_HWMON\"" > "$CACHE"
+fi
+
 GPU_USE=$(rocm-smi --showuse 2>/dev/null | grep "GPU use" | awk '{print $NF}' | tr -d '%')
 GPU_WATTS=$(awk '{printf "%.0f", $1/1000000}' "$GPU_HWMON/power1_average")
 GPU_TEMP=$(awk '{printf "%.0f", $1/1000}' "$GPU_HWMON/temp1_input")
+
 if [ "$GPU_USE" -ge 80 ]; then
     CLASS="high"
 elif [ "$GPU_USE" -ge 50 ]; then
@@ -10,4 +21,5 @@ elif [ "$GPU_USE" -ge 50 ]; then
 else
     CLASS="low"
 fi
+
 echo "{\"text\": \"${GPU_USE}% ${GPU_WATTS}W 󰹑\", \"class\": \"${CLASS}\", \"tooltip\": \"GPU temp: ${GPU_TEMP}°C\"}"

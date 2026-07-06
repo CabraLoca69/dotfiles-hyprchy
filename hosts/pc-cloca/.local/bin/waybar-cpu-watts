@@ -1,11 +1,22 @@
 #!/bin/bash
+CACHE=/tmp/waybar-cpu-paths
 
-# Buscar los hwmon por nombre en vez de por número fijo
-ENERGY_HWMON=$(grep -l zenergy /sys/class/hwmon/hwmon*/name | head -1 | xargs dirname)
-TEMP_HWMON=$(grep -l k10temp /sys/class/hwmon/hwmon*/name | head -1 | xargs dirname)
+if [ -f "$CACHE" ]; then
+    source "$CACHE"
+fi
 
-# Detectar el archivo energyN_input (puede no ser siempre energy1)
-ENERGY_FILE="$ENERGY_HWMON"/energy9_input 
+# Si el cache no existe o los paths ya no son válidos, redetectar
+if [ -z "$ENERGY_FILE" ] || [ ! -f "$ENERGY_FILE" ] || [ -z "$TEMP_HWMON" ] || [ ! -d "$TEMP_HWMON" ]; then
+    ENERGY_HWMON=$(grep -l zenergy /sys/class/hwmon/hwmon*/name | head -1 | xargs dirname)
+    TEMP_HWMON=$(grep -l k10temp /sys/class/hwmon/hwmon*/name | head -1 | xargs dirname)
+    ENERGY_LABEL_FILE=$(grep -l -i "socket\|pkg" "$ENERGY_HWMON"/energy*_label 2>/dev/null | head -1)
+    ENERGY_FILE=$(echo "$ENERGY_LABEL_FILE" | sed 's/_label$//')_input
+
+    cat > "$CACHE" <<EOF
+ENERGY_FILE="$ENERGY_FILE"
+TEMP_HWMON="$TEMP_HWMON"
+EOF
+fi
 
 E1=$(cat "$ENERGY_FILE")
 CPU1=$(grep -m1 'cpu ' /proc/stat)
