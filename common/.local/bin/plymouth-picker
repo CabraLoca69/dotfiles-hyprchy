@@ -1,0 +1,79 @@
+#!/bin/bash
+# plymouth-picker — selector de tema de Plymouth (pantalla de arranque)
+
+set -euo pipefail
+
+OMARCHY_PATH="${OMARCHY_PATH:-$HOME/.local/share/omarchy}"
+USER_THEMES_DIR="$HOME/.config/omarchy/themes/"
+DEFAULT_THEMES_DIR="$OMARCHY_PATH/themes/"
+DEFAULT_PREVIEW="$OMARCHY_PATH/default/plymouth/preview-unlock.png"
+
+declare -A seen
+entries=()  # cada entrada: "Nombre a mostrar|nombre_real_del_theme|path_al_preview"
+
+# Arma el "Display Name" a partir del nombre de carpeta (event-horizon -> Event Horizon)
+display_name_for() {
+  echo "$1" | tr '_-' '  ' | sed -E 's/(^| )([a-z])/\1\U\2/g'
+}
+
+collect_from() {
+  local dir="$1"
+  [ -d "$dir" ] || return 0
+  while IFS= read -r -d '' theme_path; do
+    local name
+    name="$(basename "$theme_path")"
+    if [ -n "${seen[$name]:-}" ]; then
+      continue
+    fi
+    local preview="$theme_path/preview-unlock.png"
+    if [ ! -f "$preview" ]; then
+      continue
+    fi
+    seen[$name]=1
+    entries+=("$(display_name_for "$name")|$name|$preview")
+  done < <(find -L "$dir" -mindepth 1 -maxdepth 1 -type d -print0 2>/dev/null)
+}
+
+# Primero temas propios (para que un override de usuario gane si hay dos con
+# el mismo nombre), después los oficiales de Omarchy.
+collect_from "$USER_THEMES_DIR"
+collect_from "$DEFAULT_THEMES_DIR"
+
+# "Default" (restaura el Plymouth original) siempre al final.
+entries+=("Default (restaurar original)|__default__|$DEFAULT_PREVIEW")
+
+if [ ${#entries[@]} -le 1 ]; then
+  echo "No encontré ningún tema con preview-unlock.png. Nada para elegir además de Default."
+fi
+
+get_preview() {
+  local preview="$1"
+  if [ -f "$preview" ]; then
+    chafa --size=60x20 --colors=256 "$preview" 2>/dev/null
+  else
+    echo "[sin preview]"
+  fi
+}
+export -f get_preview
+
+selected=$(printf '%s\n' "${entries[@]}" | fzf \
+  --delimiter '|' \
+  --with-nth=1 \
+  --prompt="Plymouth > " \
+  --preview='get_preview {3}' \
+  --preview-window=right:60:wrap \
+  --height=90% \
+  --border=rounded \
+  --info=inline) || true
+
+[ -z "$selected" ] && exit 0
+
+theme_id="$(echo "$selected" | cut -d'|' -f2)"
+
+if [ "$theme_id" = "__default__" ]; then
+  omarchy-plymouth-reset
+  echo "✓ Plymouth restaurado al original"
+else
+  omarchy-plymouth-set-by-theme "$theme_id"
+  echo "✓ Plymouth aplicado: $theme_id"
+fi

@@ -89,7 +89,7 @@ show_style_menu() {
   *Theme*) omarchy-launch-or-focus -f -t 'Theme-selector' theme-manager;;
   *Font*) show_font_menu ;;
   *Background*) show_background_menu ;;
-  *Boot*) omarchy-launch-walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
+  *Boot*) omarchy-launch-floating-terminal plymouth-picker ;;
   *) show_main_menu ;;
   esac
 }

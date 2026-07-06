@@ -22,6 +22,9 @@
 set -e
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_THEME="event-horizon"
+MERGED_DIR="$DOTFILES_DIR/merged"
+
 
 # Colores
 GREEN='\033[0;32m'
@@ -251,14 +254,6 @@ symlink() {
     info "$dst → $src"
 }
 
-
-MERGED_DIR="$DOTFILES_DIR/merged"
-
-# Symlinkea merged/$rel -> $HOME/$rel, recursivo. Si $HOME/$rel ya existe
-# como directorio REAL (no symlink) -> hay contenido ajeno al repo ahí
-# (ej: ~/.config con otras apps) -> no lo tocamos, bajamos un nivel más.
-# Si no existe, o ya es un symlink nuestro de antes -> symlink de la carpeta
-# entera, de una.
 link_merged() {
     local rel="$1"
     local src="$MERGED_DIR${rel:+/$rel}"
@@ -289,7 +284,6 @@ create_symlinks() {
     mkdir -p "$HOME"
     link_merged ""
 }
-
 
 symlink_systemd_units() {
     section "Symlinks de unidades systemd --user"
@@ -342,22 +336,31 @@ symlink_walker_restart_dropin() {
     systemctl --user daemon-reload
 }
 
+# Symlinks "atómicos" a /usr/local/bin — red de seguridad opcional. No
+# reemplaza a setup_uwsm_env (que es la forma correcta), pero cubre el caso
+# de emergencia donde algo lanzado por uwsm-app no encuentra un binario
+# propio y no da tiempo/ganas de averiguar por qué. Seleccionable con
+# --atomic-bin, re-corrible en cualquier momento.
+atomic_bin_symlinks() {
+    section "Symlinks atómicos a /usr/local/bin (red de seguridad)"
+
+    for dir in "$HOME/.local/bin" "$HOME/.local/share/omarchy/bin"; do
+        if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
+            sudo ln -sf "$dir"/* /usr/local/bin/
+            info "Symlinkeado: $dir/* → /usr/local/bin/"
+        else
+            warning "$dir vacío o inexistente, salteando."
+        fi
+    done
+}
+
 # ──────────────────────────────────────────────
 # Symlinks internos fijos
 # ──────────────────────────────────────────────
 
-
 repair_internal_symlinks() {
-    section "Symlinks internos (mako -> tema actual, menús de elephant)"
+    section "Symlinks internos (mako -> tema actual)"
     symlink "$HOME/.config/omarchy/current/theme/mako.ini" "$HOME/.config/mako/config"
-
-    local unlocks_menu="$HOME/.local/share/omarchy/default/elephant/omarchy_unlocks.lua"
-    if [ -f "$unlocks_menu" ]; then
-        mkdir -p "$HOME/.config/elephant/menus"
-        symlink "$unlocks_menu" "$HOME/.config/elephant/menus/omarchy_unlocks.lua"
-    else
-        warning "No encontré omarchy_unlocks.lua en el repo, salteando ese menú."
-    fi
 }
 
 # elephant (backend de walker) no se habilita symlinkeando un .service — trae
@@ -378,25 +381,6 @@ enable_elephant() {
     fi
 }
 
-# Symlinks "atómicos" a /usr/local/bin — red de seguridad opcional. No
-# reemplaza a setup_uwsm_env (que es la forma correcta), pero cubre el caso
-# de emergencia donde algo lanzado por uwsm-app no encuentra un binario
-# propio y no da tiempo/ganas de averiguar por qué. Seleccionable con
-# --atomic-bin, re-corrible en cualquier momento.
-atomic_bin_symlinks() {
-    section "Symlinks atómicos a /usr/local/bin (red de seguridad)"
-
-    for dir in "$HOME/.local/bin" "$HOME/.local/share/omarchy/bin"; do
-        if [ -d "$dir" ] && [ -n "$(ls -A "$dir" 2>/dev/null)" ]; then
-            sudo ln -sf "$dir"/* /usr/local/bin/
-            info "Symlinkeado: $dir/* → /usr/local/bin/"
-        else
-            warning "$dir vacío o inexistente, salteando."
-        fi
-    done
-}
-
-
 fix_bin_permissions() {
     section "Asegurando permisos de ejecución en binarios propios"
 
@@ -406,7 +390,6 @@ fix_bin_permissions() {
     info "chmod +x aplicado sobre binarios en .local/bin y omarchy/bin."
 }
 
-DEFAULT_THEME="event-horizon"
 set_default_theme() {
     section "Aplicando tema por defecto"
     if [ -z "$DEFAULT_THEME" ]; then
@@ -437,8 +420,9 @@ set_default_theme() {
     fi
 
     # Estos sí funcionan sin DE vivo — solo crean symlinks.
-    theme-manager waybar "$DEFAULT_THEME" -q
-    theme-manager hyprlock "$DEFAULT_THEME" -q
+    # se usa path desde el home, todavia no se efectua la declaracion de $PATH, no reconoce el comando directo.
+    ~/.local/bin/theme-manager waybar "$DEFAULT_THEME" -q
+    ~/.local/bin/theme-manager hyprlock "$DEFAULT_THEME" -q
     info "waybar y hyprlock apuntando a '$DEFAULT_THEME'."
 }
 
