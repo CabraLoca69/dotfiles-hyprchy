@@ -18,8 +18,8 @@ MANUAL_NOTES=()
 
 ask_yes_no() {
     local answer
-    read -rp "$(echo -e "${YELLOW}?${NC} $1 [S/n]: ")" answer
-    [[ -z "$answer" || "$answer" =~ ^[sSyY]$ ]]
+    read -rp "$(echo -e "${YELLOW}?${NC} $1 [s/N]: ")" answer
+    [[ "$answer" =~ ^[sSyY]$ ]]
 }
 
 install_pkgs() {
@@ -92,7 +92,14 @@ setup_display_manager() {
 # ──────────────────────────────────────────────
 #
 # Salta la pantalla de login por completo, entra directo a la sesión gráfica
-# al bootear. 
+# al bootear. Tiene sentido en máquinas que no salen de un entorno de
+# confianza (no viajan, no las usa nadie más) — el "bloqueo" en ese caso lo
+# das vos a mano con el bind de hyprlock, no SDDM al arrancar.
+#
+# NO se activa sin preguntar: es una decisión de seguridad real, no un
+# default. Si además querés que la sesión arranque bloqueada (equivalente a
+# lo que SDDM te daba antes), agregá 'hyprlock' bien arriba de tu
+# autostart.lua — ver README.
 
 setup_sddm_autologin() {
     section "Autologin de SDDM"
@@ -283,6 +290,46 @@ fix_keyring_pam() {
 }
 
 # ──────────────────────────────────────────────
+# Hook de pacman: reiniciar walker tras actualizarlo
+# ──────────────────────────────────────────────
+
+setup_walker_pacman_hook() {
+    section "Hook de pacman: reiniciar walker tras actualizaciones"
+
+    local omarchy_path="$HOME/.local/share/omarchy"
+    local restart_script="$omarchy_path/bin/omarchy-restart-walker"
+    local hook_file="/etc/pacman.d/hooks/walker-restart.hook"
+
+    if [ ! -f "$restart_script" ]; then
+        warning "No encontré $restart_script, salteando el hook de pacman."
+        return
+    fi
+
+    if [ -f "$hook_file" ] && grep -q "$restart_script" "$hook_file" 2>/dev/null; then
+        info "$hook_file ya está configurado."
+        return
+    fi
+
+    sudo mkdir -p /etc/pacman.d/hooks
+    sudo tee "$hook_file" > /dev/null << EOF
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = walker
+Target = walker-debug
+Target = elephant*
+
+[Action]
+Description = Restarting Walker services after system update
+When = PostTransaction
+Exec = $restart_script
+EOF
+    info "$hook_file creado — walker se reinicia solo tras actualizar walker/elephant."
+    warning "Nota: el path queda hardcodeado a tu \$HOME actual ($HOME). Si esta máquina"
+    warning "tiene más de un usuario usando walker, este hook solo cubre al que lo corrió."
+}
+
+# ──────────────────────────────────────────────
 # Notas finales
 # ──────────────────────────────────────────────
 
@@ -316,6 +363,7 @@ main() {
     enable_core_services
     add_user_groups
     fix_keyring_pam
+    setup_walker_pacman_hook
 
     print_manual_notes
 

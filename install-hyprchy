@@ -290,10 +290,7 @@ create_symlinks() {
     link_merged ""
 }
 
-# Unidades de systemd --user que vienen con el repo (ej: swayosd-server.service).
-# El symlink de ~/.local/share/omarchy de arriba las hace visibles DENTRO de
-# ese árbol, pero systemd --user busca en ~/.config/systemd/user/ — hace
-# falta este segundo symlink explícito, uno por unidad.
+
 symlink_systemd_units() {
     section "Symlinks de unidades systemd --user"
 
@@ -330,17 +327,37 @@ symlink_autostart_entries() {
     fi
 }
 
+symlink_walker_restart_dropin() {
+    section "Symlink de restart.conf para app-walker@autostart.service"
+
+    local restart_conf="$HOME/.local/share/omarchy/default/walker/restart.conf"
+    if [ ! -f "$restart_conf" ]; then
+        warning "No encontré restart.conf en el repo, salteando."
+        warning "Walker no se va a reiniciar solo si crashea a mitad de sesión."
+        return
+    fi
+
+    mkdir -p "$HOME/.config/systemd/user/app-walker@autostart.service.d"
+    symlink "$restart_conf" "$HOME/.config/systemd/user/app-walker@autostart.service.d/restart.conf"
+    systemctl --user daemon-reload
+}
+
 # ──────────────────────────────────────────────
 # Symlinks internos fijos
 # ──────────────────────────────────────────────
-#
-# current/theme/ es estado RUNTIME que genera el theme switcher, no un
-# dotfile — por eso no vive en el repo. Estos symlinks son la relación fija
-# hacia ese estado derivado, y el "set" de más abajo lo genera la primera vez.
+
 
 repair_internal_symlinks() {
-    section "Symlinks internos (mako -> tema actual)"
+    section "Symlinks internos (mako -> tema actual, menús de elephant)"
     symlink "$HOME/.config/omarchy/current/theme/mako.ini" "$HOME/.config/mako/config"
+
+    local unlocks_menu="$HOME/.local/share/omarchy/default/elephant/omarchy_unlocks.lua"
+    if [ -f "$unlocks_menu" ]; then
+        mkdir -p "$HOME/.config/elephant/menus"
+        symlink "$unlocks_menu" "$HOME/.config/elephant/menus/omarchy_unlocks.lua"
+    else
+        warning "No encontré omarchy_unlocks.lua en el repo, salteando ese menú."
+    fi
 }
 
 # elephant (backend de walker) no se habilita symlinkeando un .service — trae
@@ -380,7 +397,15 @@ atomic_bin_symlinks() {
 }
 
 
-# TODO: definir el tema default 
+fix_bin_permissions() {
+    section "Asegurando permisos de ejecución en binarios propios"
+
+    for dir in "$HOME/.local/bin" "$HOME/.local/share/omarchy/bin"; do
+        [ -d "$dir" ] && chmod +x "$dir"/* 2>/dev/null
+    done
+    info "chmod +x aplicado sobre binarios en .local/bin y omarchy/bin."
+}
+
 DEFAULT_THEME="event-horizon"
 set_default_theme() {
     section "Aplicando tema por defecto"
@@ -493,9 +518,11 @@ main() {
     setup_xdg_terminal
     create_merged_dir
     create_symlinks
+    fix_bin_permissions
     repair_internal_symlinks
     symlink_systemd_units
     symlink_autostart_entries
+    symlink_walker_restart_dropin
     enable_elephant
     enable_hyprsunset_daynight
     set_default_theme
