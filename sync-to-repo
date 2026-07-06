@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+set -e
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMMON_DIR="$DOTFILES_DIR/common"
+HOSTNAME_ID="$(hostnamectl --static 2>/dev/null || hostname)"
+HOST_DIR="$DOTFILES_DIR/hosts/$HOSTNAME_ID"
+MERGED_DIR="$DOTFILES_DIR/merged"
+
+YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+echo "[+] Sincronizando merged/ -> repo (host: $HOSTNAME_ID)"
+
+ask_destination() {
+    local rel="$1"
+    local answer
+    while true; do
+        echo -e "${YELLOW}?${NC} Archivo nuevo: ${CYAN}$rel${NC}" >&2
+        read -rp "  ¿Va a (c)ommon [compartido] o a (h)ost [solo $HOSTNAME_ID]? [c/h]: " answer >&2
+        case "$answer" in
+            [cC]) echo "$COMMON_DIR/$rel"; return ;;
+            [hH]) echo "$HOST_DIR/$rel"; return ;;
+            *) echo "  Respuesta inválida, probá de nuevo." >&2 ;;
+        esac
+    done
+}
+
+while IFS= read -r -d '' f; do
+    rel="${f#"$MERGED_DIR"/}"
+
+    if [ -f "$HOST_DIR/$rel" ] || [ -L "$HOST_DIR/$rel" ]; then
+        dest="$HOST_DIR/$rel"                       # ya era override de este host
+    elif [ -f "$COMMON_DIR/$rel" ] || [ -L "$COMMON_DIR/$rel" ]; then
+        dest="$COMMON_DIR/$rel"                     # ya existía como compartido
+    else
+        dest="$(ask_destination "$rel")"            # archivo nuevo -> preguntar
+    fi
+
+    mkdir -p "$(dirname "$dest")"
+    cp -a "$f" "$dest"
+done < <(find "$MERGED_DIR" -type f -print0)
+
+echo ""
+echo "[+] Listo. Revisá 'git status' antes de commitear."
+echo ""
+echo "[!] Chequeo de huérfanos (existen en el repo pero ya no en merged/):"
+comm -23 \
+    <(cd "$COMMON_DIR" && find . -type f | sed 's|^\./||' | sort; \
+      [ -d "$HOST_DIR" ] && cd "$HOST_DIR" && find . -type f | sed 's|^\./||' | sort) \
+    <(cd "$MERGED_DIR" && find . -type f | sed 's|^\./||' | sort) \
+    | sed 's/^/    /'
