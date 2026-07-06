@@ -84,12 +84,12 @@ show_toggle_menu() {
 }
 
 show_style_menu() {
-  case $(menu "Style" "󰸌  Theme\n  Font\n  Background\n󰍜  Waybar") in
+  case $(menu "Style" "󰸌  Theme\n  Font\n  Background\n󰍜  Boot") in
 
   *Theme*) omarchy-launch-or-focus -f -t 'Theme-selector' theme-manager;;
   *Font*) show_font_menu ;;
   *Background*) show_background_menu ;;
-  *Waybar*) show_waybar_position_menu ;;
+  *Boot*) omarchy-launch-walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
   *) show_main_menu ;;
   esac
 }
