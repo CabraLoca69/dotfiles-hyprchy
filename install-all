@@ -52,6 +52,10 @@ for f in "$INSTALL_SH" "$DRIVERS_SH" "$BOOTSTRAP_SH"; do
 done
 
 # ──────────────────────────────────────────────
+# Tema, al final si no no anda por alguna razon
+# ──────────────────────────────────────────────
+
+# ──────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────
 
@@ -73,6 +77,7 @@ main() {
 
     section "Listo"
     info "Los 3 pasos terminaron. Se recomienda reiniciar ahora:"
+
     echo "    sudo reboot"
 }
 

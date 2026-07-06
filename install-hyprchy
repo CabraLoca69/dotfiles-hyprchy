@@ -318,10 +318,6 @@ symlink_systemd_units() {
     fi
 }
 
-# walker.desktop tiene que estar en ~/.config/autostart/ para que el
-# generador de systemd (xdg-desktop-autostart-generator) le arme la unidad
-# transitoria app-walker@autostart.service solo. Sin este symlink, walker
-# nunca termina de arrancar bien y omarchy-restart-walker falla.
 symlink_autostart_entries() {
     section "Symlinks de autostart XDG"
 
@@ -384,26 +380,56 @@ atomic_bin_symlinks() {
 }
 
 
-# TODO: definir el tema default (placeholder, lo armás vos después)
+# TODO: definir el tema default 
 DEFAULT_THEME="event-horizon"
-
 set_default_theme() {
     section "Aplicando tema por defecto"
-
     if [ -z "$DEFAULT_THEME" ]; then
         warning "DEFAULT_THEME no está definido, salteando theme set."
-        warning "Corré manualmente: theme-manager set <tema> -w -k --hyprlock"
+        warning "Corré manualmente: theme-manager set <tema> o abrilo theme manager con SUPER + ALT + C"
         return
     fi
+
+    local theme_src="$HOME/.config/omarchy/themes/$DEFAULT_THEME"
+    local theme_current="$HOME/.config/omarchy/current/theme"
+    local theme_name_file="$HOME/.config/omarchy/current/theme.name"
+
+    if [ ! -d "$theme_src" ]; then
+        warning "No encontré $theme_src, salteando theme set."
+        return
+    fi
+
+
+    rm -rf "$theme_current"
+    mkdir -p "$theme_current"
+    cp -r "$theme_src"/. "$theme_current"/
+    echo "$DEFAULT_THEME" > "$theme_name_file"
+    info "Tema '$DEFAULT_THEME' copiado a current/theme/ (sin depender de Hyprland vivo)."
 
     if ! command -v theme-manager &>/dev/null; then
-        warning "theme-manager no encontrado, salteando."
+        warning "theme-manager no encontrado, salteando waybar/hyprlock."
         return
     fi
 
-    theme-manager set "$DEFAULT_THEME" -q
-    theme-manager waybar event-horizon -q
-    info "Tema '$DEFAULT_THEME' aplicado (waybar, walker, hyprlock, mako)."
+    # Estos sí funcionan sin DE vivo — solo crean symlinks.
+    theme-manager waybar "$DEFAULT_THEME" -q
+    theme-manager hyprlock "$DEFAULT_THEME" -q
+    info "waybar y hyprlock apuntando a '$DEFAULT_THEME'."
+}
+
+#setea el autostart para el filtro de luz azul
+enable_hyprsunset_daynight() {
+    section "Habilitando hyprsunset-daynight (ciclo día/noche automático)"
+    if ! systemctl --user list-unit-files hyprsunset-daynight.service &>/dev/null; then
+        warning "No encontré la unidad hyprsunset-daynight.service, salteando."
+        return
+    fi
+    if systemctl --user is-enabled hyprsunset-daynight.service &>/dev/null; then
+        info "hyprsunset-daynight.service ya está habilitado."
+    else
+        systemctl --user enable hyprsunset-daynight.service
+        info "hyprsunset-daynight.service habilitado (arranca solo con la sesión gráfica)."
+    fi
 }
 
 #crear dir merged:
@@ -469,9 +495,9 @@ main() {
     create_symlinks
     repair_internal_symlinks
     symlink_systemd_units
-    symlink_systemd_units
     symlink_autostart_entries
     enable_elephant
+    enable_hyprsunset_daynight
     set_default_theme
 
     if [[ " $* " == *" --atomic-bin "* ]]; then

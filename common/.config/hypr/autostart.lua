@@ -15,11 +15,6 @@ o.launch_on_start("omarchy-hyprland-monitor-watch")
 -- Run post-boot hooks after startup config has loaded.
 o.exec_on_start("sleep 2 && omarchy-hook post-boot")
 
--- luz azul
-hl.on("hyprland.start", function()
-        hl.exec_cmd("hypersunset_daynight")
-end)
-
 -- wallpaper
  hl.on("hyprland.start", function()
      hl.exec_cmd("wallpaper-on-start")

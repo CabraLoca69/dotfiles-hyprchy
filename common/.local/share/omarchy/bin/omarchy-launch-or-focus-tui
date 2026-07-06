@@ -1,9 +1,14 @@
 #!/bin/bash
-
-# omarchy:summary=Launch a TUI or focus an existing terminal window for it
+# omarchy:summary=Launch a TUI command in the default terminal with Omarchy styling, or focus it if already running
 # omarchy:args=<command> [args...]
-
 APP_ID="org.omarchy.$(basename "$1")"
-LAUNCH_COMMAND="omarchy-launch-tui $@"
 
-exec omarchy-launch-or-focus -f -t "$APP_ID" "$LAUNCH_COMMAND"
+WINDOW_ADDRESS=$(hyprctl clients -j | jq -r --arg p "$APP_ID" \
+    '.[]|select(.class|test("\\b" + $p + "\\b";"i"))|.address' | head -n1)
+
+if [[ -n "$WINDOW_ADDRESS" ]]; then
+    hyprctl dispatch "hl.dsp.focus({ window = \"address:$WINDOW_ADDRESS\" })" >/dev/null 2>&1 \
+        || hyprctl dispatch focuswindow "address:$WINDOW_ADDRESS"
+else
+    exec setsid uwsm-app -- xdg-terminal-exec --app-id="$APP_ID" -e "$1" "${@:2}"
+fi
