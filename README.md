@@ -28,9 +28,11 @@ Orden correcto:
 
 Orden correcto:
 
-1. **Sistema base instalado**, estás en una TTY.
-   (Paso 2 y 3 opcionales para asegurar o si no estás acostumbrado a la terminal,
-   se puede saltar al 4 desde TTY.)
+Orden correcto:
+
+1. **Sistema base instalado**, estás en una TTY. (Paso 2 y 3 opcionales para asegurar o si no
+   estás acostumbrado a la terminal, se puede saltar al 4 desde TTY.)
+
 2. **Instalar Hyprland + UWSM + SDDM desde la distro**, mínimo, sin metapaquetes tipo
    `cachyos-hyprland-settings` (traen su propio waybar/tema/wallpapers, que no queremos):
 
@@ -43,10 +45,12 @@ Orden correcto:
 
    Con ese reboot alcanza — no hace falta loguear y verificar nada a mano antes de seguir, es
    directo al paso 3.
+
 3. En SDDM, elegir la sesión **"Hyprland (uwsm-managed)"** (no "Hyprland" a secas). Esto sigue
    aplicando siempre que no hayas configurado autologin — si lo hiciste (`bootstrap-system` te lo
    pregunta), SDDM ya arranca directo con esa sesión sin pedirte elegir, así que el punto queda
    resuelto solo. Si elegís "Hyprland" a secas en algún momento (sin UWSM), cosas se rompen.
+
 4. Recién ahí, clonar este repo y correr `./install-all`.
 
 ## Instalación
