@@ -119,6 +119,18 @@ tooltip {
 }
 
 
+#left1,
+#left3,
+#right1,
+#right2,
+#workspaces,
+#mpris,
+tooltip {
+  background-color: alpha(@base, 0.80);
+  border-radius: 8px;
+  border: 1px solid alpha(@text, 0.50);
+}
+
 /* --- General Modules --- */
 
 #tray,

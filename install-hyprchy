@@ -447,6 +447,24 @@ create_merged_dir(){
     "$DOTFILES_DIR/build-merged"
 }
 
+# ──────────────────────────────────────────────
+# Templating de configs con paths absolutos
+# ──────────────────────────────────────────────
+
+template_share_picker_config() {
+    section "Generando config del share-picker con \$HOME absoluto"
+
+    local target="$HOME/.config/hyprland-preview-share-picker.yaml"
+
+    if [ ! -e "$target" ]; then
+        warning "No encontré $target, salteando templating del share-picker."
+        return
+    fi
+
+    sed -i "s|__HOME__|$HOME|g" "$target"
+    info "$target actualizado con \$HOME = $HOME"
+}
+
 
 # ──────────────────────────────────────────────
 # Avisos post-instalación
@@ -509,6 +527,7 @@ main() {
     symlink_walker_restart_dropin
     enable_elephant
     enable_hyprsunset_daynight
+    template_share_picker_config
     set_default_theme
 
     if [[ " $* " == *" --atomic-bin "* ]]; then

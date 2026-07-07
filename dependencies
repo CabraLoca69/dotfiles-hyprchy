@@ -30,6 +30,7 @@ PACMAN_DEPS=(
     wl-clipboard
     calcurse
     fcitx5
+    gum
 
     # Terminal y shell
     alacritty

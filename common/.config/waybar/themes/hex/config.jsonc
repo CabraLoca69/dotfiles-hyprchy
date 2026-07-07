@@ -14,7 +14,6 @@
     "orientation": "inherit",
     "modules": [
       "custom/omarchy",
-      "idle_inhibitor",
       "custom/screenrecording-indicator",
       "custom/updatespacman",
       "custom/update"
@@ -22,7 +21,7 @@
   },
 "group/left2": {
     "orientation": "inherit",
-    "modules": ["hyprland/workspaces"]
+    "modules": ["clock"]
   },
   "group/left3": {
     "orientation": "inherit",
@@ -34,35 +33,32 @@
     "group/tray-expander",
     "backlight",
     "bluetooth",
-    "pulseaudio",
     "network",
+    "pulseaudio",
     "memory",
     "cpu",
-    "battery",
-    "custom/weather",
-    "clock"
+    "battery"
+
   ],
   "hyprland/workspaces": {
     "on-click": "activate",
     "format": "{icon}",
     "format-icons": {
-      "1": "1",
-      "2": "2",
-      "3": "3",
-      "4": "4",
-      "5": "5",
-      "6": "6",
-      "7": "7",
-      "8": "8",
-      "9": "9",
-      "10": "10"
+      "1": "一",
+      "2": "二",
+      "3": "三",
+      "4": "四",
+      "5": "五",
+      "6": "六",
+      "7": "七",
+      "8": "八",
+      "9": "九",
+      "10": "十"
     },
     "persistent-workspaces": {
       "1": [],
       "2": [],
-      "3": [],
-      "4": [],
-      "5": []
+      "3": []
     }
   },
   "custom/omarchy": {
@@ -218,11 +214,11 @@
     "device": "intel_backlight",
     "format": "{percent}% {icon}",
     "format-icons": [
-      "🌑",
-      "🌘",
-      "🌗",
-      "🌖",
-      "🌕"
+      "一",
+      "二",
+      "三",
+      "四",
+      "五"
     ]
   },
   "custom/weather": {

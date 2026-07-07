@@ -28,11 +28,11 @@ CACHYOS_REPO_DISABLED=false
 # ──────────────────────────────────────────────
 
 is_multilib_enabled() {
-    grep -q "^\[multilib\]" /etc/pacman.conf 2>/dev/null
+    grep -q "^\[multilib\]" "$PACMAN_CONF" 2>/dev/null
 }
 
 is_cachyos_repo_enabled() {
-    grep -q "^\[cachyos\]" "$PACMAN_CONF" 2>/dev/null
+    grep -q "^\[cachyos-v3\]" "$PACMAN_CONF" 2>/dev/null
 }
 
 install_pkgs() {
@@ -79,25 +79,22 @@ ask_yes_no() {
 # conflictúa con los paquetes mesa/vulkan-* estándar que este script instala
 # según la GPU detectada. pacman se niega a instalar y aborta.
 #
-# En vez de pedirle al usuario que comente el repo a mano en pacman.conf
-# antes de correr esto (fácil de olvidar, fácil de dejar comentado para
-# siempre sin querer), lo deshabilitamos temporalmente con backup y lo
-# restauramos al final pase lo que pase (trap).
+
 
 disable_cachyos_repo_temporarily() {
     if ! is_cachyos_repo_enabled; then
         return
     fi
 
-    warning "Repo [cachyos] detectado — trae mesa-git, que conflictúa con mesa estándar."
+    warning "Repo [cachyos-v3] detectado — trae mesa-git, que conflictúa con mesa estándar."
     if ! ask_yes_no "¿Deshabilitarlo temporalmente durante la instalación de drivers de GPU? (se restaura solo al terminar)"; then
         warning "Seguí sin deshabilitar. Si pacman tira conflicto de mesa-git, comentá"
-        warning "[cachyos] a mano en $PACMAN_CONF y volvé a correr este script."
+        warning "[cachyos-v3] a mano en $PACMAN_CONF y volvé a correr este script."
         return
     fi
 
     sudo cp "$PACMAN_CONF" "$PACMAN_CONF_BAK"
-    sudo sed -i '/^\[cachyos\]/,/^Include/s/^/#/' "$PACMAN_CONF"
+    sudo sed -i '/^\[cachyos-v3\]/,/^Include/s/^/#/' "$PACMAN_CONF"
     sudo pacman -Sy
     CACHYOS_REPO_DISABLED=true
     info "[cachyos] deshabilitado temporalmente (backup en $PACMAN_CONF_BAK)."
@@ -330,7 +327,7 @@ main() {
     echo "  └─────────────────────────────┘"
     echo -e "${NC}"
 
-    # Pase lo que pase (error, Ctrl+C, etc), restaurar pacman.conf si lo tocamos.
+    # Pase lo que pase, restaurar pacman.conf si se toco.
     trap restore_cachyos_repo EXIT
 
     if ! command -v lspci &>/dev/null; then

@@ -1,0 +1,26 @@
+name: "Omarchy: Catppuccin Mocha"
+accent: "#cba6f7"         # Mauve accent
+cursor: "#cba6f7"         # Mauve cursor
+background: "#1e1e2e"     # Surface 0
+foreground: "#cdd6f4"     # Text
+details: darker
+
+terminal_colors:
+  normal:
+    black:   "#45475a"    # Surface 1
+    red:     "#f38ba8"    # Red
+    green:   "#cba6f7"    # Amethyst
+    yellow:  "#f9e2af"    # Yellow
+    blue:    "#89b4fa"    # Blue
+    magenta: "#cba6f7"    # Mauve
+    cyan:    "#b4befe"    # Lavender
+    white:   "#bac2de"    # Subtext 1
+  bright:
+    black:   "#585b70"    # Surface 2
+    red:     "#f38ba8"    # Red
+    green:   "#cba6f7"    # Amethyst
+    yellow:  "#f9e2af"    # Yellow
+    blue:    "#89b4fa"    # Blue
+    magenta: "#cba6f7"    # Mauve
+    cyan:    "#b4befe"    # Lavender
+    white:   "#cdd6f4"    # Text
