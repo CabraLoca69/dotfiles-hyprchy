@@ -11,6 +11,7 @@
 #
 # Uso:
 #   ./install-hyprchy                # instalación normal
+#   ./install-hyprchy nombredir    -> $DOTFILES_DIR/nombredir
 #   ./install-hyprchy --atomic-bin   # además, symlinkea ~/.local/bin y
 #                                     # ~/.local/share/omarchy/bin enteros a
 #                                     # /usr/local/bin (red de seguridad para
@@ -25,12 +26,10 @@ DEFAULT_THEME="event-horizon" #tema por defecto.
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MERGED_DIR="$DOTFILES_DIR/merged" #directorio donde sale la instalacion
+
 # ──────────────────────────────────────────────
 # Nombre del dir de merge (opcional)
 # ──────────────────────────────────────────────
-# ./install-hyprchy              -> $DOTFILES_DIR/merged
-# ./install-hyprchy nombredir    -> $DOTFILES_DIR/nombredir
-# ./install-hyprchy --atomic-bin -> sigue siendo la flag, no un nombre de dir
 MERGED_NAME="merged"
 for arg in "$@"; do
     case "$arg" in
@@ -46,7 +45,9 @@ create_merged_dir(){
     "$DOTFILES_DIR/build-merged" "$MERGED_NAME"
 }
 
+# ──────────────────────────────────────────────
 # Colores
+# ──────────────────────────────────────────────
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -77,13 +78,14 @@ if [ ! -f "$DEPENDENCIES_FILE" ]; then
     exit 1
 fi
 
-# shellcheck source=dependencies
 source "$DEPENDENCIES_FILE"
 
 # ──────────────────────────────────────────────
 # paru
 # ──────────────────────────────────────────────
-# se instala paru desde repos de cachyos o se compila, paru-git tira tira conflicto con libalpm de vez en cuando. (complicado de debuguear/solucionar mejor evitarlo)
+# se instala paru desde repos de cachyos o se compila, paru-git tira tira conflicto con libalpm de vez en cuando.
+# (complicado de debuguear/solucionar mejor evitarlo)
+
 install_paru() {
     section "paru"
 
@@ -182,10 +184,9 @@ install_cachyos_deps() {
         info "Todas las dependencias CachyOS ya están instaladas."
     else
         info "Paquetes CachyOS a instalar: ${missing[*]}"
-        sudo pacman -S --needed "${missing[@]}"
+        sudo pacman -S --needed --noconfirm "${missing[@]}"
     fi
 }
-
 
 #se inicia starship ya que estamos detectando el shell
 setup_path() {
@@ -236,6 +237,8 @@ setup_path() {
     warning "Reiniciá la shell o ejecutá: source $shell_rc"
 }
 
+# si uwsm se levanta re loco, puede no reconocer este path, usar --atomic-bin si
+# no se da con una solucion.
 setup_uwsm_env() {
     section "Configurando ~/.config/uwsm/env (PATH para la sesión gráfica)"
 
@@ -278,7 +281,6 @@ EOF
 # ──────────────────────────────────────────────
 # Symlinks
 # ──────────────────────────────────────────────
-
 symlink() {
     local src="$1"
     local dst="$2"
@@ -350,10 +352,6 @@ symlink_systemd_units() {
     fi
 }
 
-# walker.desktop tiene que estar en ~/.config/autostart/ para que el
-# generador de systemd (xdg-desktop-autostart-generator) le arme la unidad
-# transitoria app-walker@autostart.service solo. Sin este symlink, walker
-# nunca termina de arrancar bien y omarchy-restart-walker falla.
 symlink_autostart_entries() {
     section "Symlinks de autostart XDG"
 
@@ -381,11 +379,7 @@ symlink_walker_restart_dropin() {
     systemctl --user daemon-reload
 }
 
-# Symlinks "atómicos" a /usr/local/bin — red de seguridad opcional. No
-# reemplaza a setup_uwsm_env (que es la forma correcta), pero cubre el caso
-# de emergencia donde algo lanzado por uwsm-app no encuentra un binario
-# propio y no da tiempo/ganas de averiguar por qué. Seleccionable con
-# --atomic-bin, re-corrible en cualquier momento.
+#opcional, por si uwsm no recnone el su $PATH 
 atomic_bin_symlinks() {
     section "Symlinks atómicos a /usr/local/bin (red de seguridad)"
 
@@ -402,7 +396,6 @@ atomic_bin_symlinks() {
 # ──────────────────────────────────────────────
 # Symlinks internos fijos
 # ──────────────────────────────────────────────
-
 repair_internal_symlinks() {
     section "Symlinks internos (mako -> tema actual)"
     symlink "$HOME/.config/omarchy/current/theme/mako.ini" "$HOME/.config/mako/config"
@@ -428,7 +421,6 @@ enable_elephant() {
 
 #setea el autostart para el filtro de luz azul
 enable_hyprsunset_daynight() {
-    #esto no encuentra el .service, donde deberia ponerlo?
     section "Habilitando hyprsunset-daynight (ciclo día/noche automático)"
     if ! systemctl --user list-unit-files hyprsunset-daynight.service &>/dev/null; then
         warning "No encontré la unidad hyprsunset-daynight.service, salteando."
@@ -486,11 +478,9 @@ set_default_theme() {
     info "waybar y hyprlock apuntando a '$DEFAULT_THEME'."
 }
 
-
 # ──────────────────────────────────────────────
 # Templating de configs con paths absolutos
 # ──────────────────────────────────────────────
-
 template_share_picker_config() {
     section "Generando config del share-picker con \$HOME absoluto"
 
@@ -509,7 +499,6 @@ template_share_picker_config() {
 # ──────────────────────────────────────────────
 # Avisos post-instalación
 # ──────────────────────────────────────────────
-
 post_install_notes() {
     section "Notas post-instalación"
 
@@ -543,7 +532,6 @@ post_install_notes() {
 # ──────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────
-
 main() {
     echo -e "${CYAN}"
     echo "  ┌─────────────────────────────┐"

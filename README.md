@@ -41,12 +41,22 @@ cd ~/dotfiles-hyprchy
 ./install-all
 ```
 
+`install-all` pregunta **una sola vez, al principio**, confirmación para arrancar, y ahí pide
+la contraseña de `sudo` — la mantiene viva en background durante toda la instalación, así que no
+te la vuelve a pedir a mitad de camino (ni aunque AUR tarde compilando más de los 15 min de
+timeout default de sudo). De ahí en más corre todo de punta a punta sin preguntar nada más,
+**salvo** en `bootstrap-system`, donde sí hay un par de confirmaciones puntuales por tratarse de
+decisiones de seguridad (autologin de SDDM, habilitar `[multilib]`, integración de PAM con
+gnome-keyring).
+
 Corre, en orden:
 
 1. **`install-hyprchy`** — paru, dependencias (pacman/AUR/CachyOS), `PATH`, symlinks de configs,
-   unidades de systemd, autostart de walker, elephant.
-2. **`install-drivers`** — detecta CPU/GPU, instala microcode y drivers gráficos correspondientes.
-3. **`bootstrap-system`** — multilib, servicios, grupos, keyring, display manager.
+   unidades de systemd, autostart de walker, elephant, tema default.
+2. **`install-drivers`** — detecta CPU/GPU, instala microcode y drivers gráficos correspondientes
+   (incluyendo detección automática de variante NVIDIA `-open-dkms` vs `-dkms` según el modelo).
+3. **`bootstrap-system`** — multilib, servicios, grupos, keyring, display manager. Acá sí hay
+   prompts, por diseño.
 
 Todos los pasos son **idempotentes** — correr `./install-all` de nuevo no rompe nada, cada script
 chequea antes de tocar algo.
@@ -54,13 +64,23 @@ chequea antes de tocar algo.
 ### Flags útiles
 
 ```bash
-./install-all --atomic-bin       # ver sección "Red de seguridad de PATH" más abajo
-./install-hyprchy --atomic-bin   # lo mismo, corriendo solo ese paso
+./install-all --atomic-bin           # ver sección "Red de seguridad de PATH" más abajo
+./install-hyprchy --atomic-bin       # lo mismo, corriendo solo ese paso
+
+./install-all nombredir              # usa dotfiles-hyprchy/nombredir en vez de merged/
+./install-hyprchy nombredir          # idem, corriendo solo ese paso
 ```
 
+Por default, `build-merged` arma el árbol combinado (`common/` + `hosts/<hostname>/`) en
+`merged/`. Si le pasás un nombre como primer argumento posicional (a `install-all` o
+`install-hyprchy` directo, `--atomic-bin` no cuenta como nombre), usa esa carpeta en cambio —
+pensado para tener más de un árbol armado en paralelo sin pisarse (por ejemplo probar una config
+nueva sin tocar la que ya anda). Si no pasás nada, sigue siendo `merged/` como siempre.
+
 ⚠️ Se bajan bastantes paquetes del AUR (repositorio de la comunidad, no oficial de Arch) durante
-`install-hyprchy`. Si te importa revisar cada uno antes de instalarlo, sacá `--skipreview` del
-`paru -S` en el script y hacelo a mano la primera vez.
+`install-hyprchy`, con `--noconfirm --skipreview` (no pide confirmación por paquete ni pausa a
+revisar el `PKGBUILD`). Si te importa revisar cada uno antes de instalarlo, sacá esos flags del
+`paru -S` en el script y hacelo a mano la primera vez, tambien podes revisar la lista de dependencias.
 
 ## Por qué tantas cosas necesitan un fix manual — UWSM y el entorno de la sesión
 
@@ -198,15 +218,23 @@ tenías configurado a mano. Si usás otro terminal, editá `~/.config/xdg-termin
 
 ## Drivers de GPU: conflicto con `[cachyos]`
 
-Si tenés el repo `[cachyos]` habilitado en `pacman.conf`, trae `mesa-git` (y variantes `-git` de
+Si tenés el repo `[cachyos-v3]` habilitado en `pacman.conf`, trae `mesa-git` (y variantes `-git` de
 `vulkan-*`), que **conflictúa** con los paquetes `mesa`/`vulkan-*` estándar que `install-drivers`
 instala según la GPU detectada — pacman aborta con conflicto.
 
-`install-drivers` ya maneja esto solo: si detecta `[cachyos]` habilitado y vas a instalar drivers
-de GPU, te pregunta si querés deshabilitarlo temporalmente (con backup de `pacman.conf`) durante
-esa instalación puntual, y lo restaura automáticamente al terminar — pase lo que pase, incluso si
-el script falla a mitad de camino (usa un `trap` sobre `EXIT`). No hace falta comentarlo a mano
-vos mismo.
+`install-drivers` ya maneja esto solo, sin preguntar: si detecta `[cachyos-v3]` habilitado y vas a
+instalar drivers de GPU, lo deshabilita temporalmente (con backup de `pacman.conf`) durante esa
+instalación puntual, y lo restaura automáticamente al terminar — pase lo que pase, incluso si el
+script falla a mitad de camino (usa un `trap` sobre `EXIT`). No hace falta tocar nada a mano.
+
+## Drivers NVIDIA: variante open/dkms automática
+
+`install-drivers` ya no pregunta si tu GPU es Turing (RTX 20xx) o más nueva — lo detecta solo vía
+`lspci` (busca `RTX`, `Quadro RTX/Txxxx`, `Tesla T4`, `Axxx0`, etc. en el nombre del dispositivo)
+y elige `nvidia-open-dkms` o `nvidia-dkms` en consecuencia. Si el modelo no matchea ninguno de esos
+patrones (GPU muy nueva que no está en la lista, o nombre no estándar), cae a `nvidia-dkms` por
+default y te lo deja anotado en las notas post-instalación — si el driver `-open` te interesa igual,
+reinstalá a mano: `sudo pacman -S nvidia-open-dkms`.
 
 ## paru: fuente, no `-bin`
 
@@ -221,6 +249,13 @@ momento de compilarlo. En distros con `pacman` de build git/dev (como CachyOS,
 `error while loading shared libraries: libalpm.so.N: cannot open shared object file` — sin arreglo
 posible salvo esperar una build nueva en el AUR. `paru` fuente compila contra el `libalpm` real del
 sistema en el momento de instalarlo, así que no tiene ese problema.
+
+`paru` fuente compila contra el `libalpm` real del sistema en el momento de instalarlo, así que no
+tiene ese problema.
+
+Se compila con `makepkg -si --noconfirm` — no debería pedir input, salvo que algún `install()`
+script del PKGBUILD pida confirmación propia (caso borde raro). Si un paquete AUR puntual cuelga
+la instalación desatendida por esto, comentalo en `dependencies` y instalalo después a mano.
 
 ## Múltiples máquinas: `common/` + `hosts/<hostname>/`
 
@@ -266,7 +301,8 @@ sync-to-repo                     # baja cambios editados en merged/ de vuelta al
 dependencies                           # PACMAN_DEPS / AUR_DEPS / CACHYOS_DEPS
 common/                                  # dotfiles compartidos
 hosts/<hostname>/                          # overrides puntuales por máquina
-merged/                                      # GENERADO, gitignoreado — no editar el repo acá directo pensando que persiste solo con git
+merged(o nombredir)/                         # GENERADO, puede estar gitignoreado — 
+                                             # no editar el repo acá directo pensando que persiste solo con git
 `````
 
 

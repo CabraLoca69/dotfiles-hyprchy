@@ -9,7 +9,7 @@
 # cada script y cada paso ya es idempotente (chequea antes de instalar/tocar nada).
 #
 # Uso:
-#   ./install-all
+#   ./install-all 
 #
 # Asume que install-hyprchy, install-drivers y bootstrap-system están
 # en el mismo directorio que este script (es decir, en la raíz del repo
