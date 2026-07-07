@@ -10,28 +10,36 @@ aplicar solo lo visual/config de este repo.
 ## Filosofía / orden de instalación
 
 **No instales estas dotfiles antes de tener Hyprland instalado por el gestor de paquetes de tu
-distro.** Se probó al revés (dotfiles primero, Hyprland después) y deja el sistema en un estado
-inconsistente — la entrada `hyprland-uwsm.desktop` en SDDM la genera el paquete de Hyprland/UWSM,
-no este repo, y varios paths asumen que ya existen cuando se instalan.
+distro, y andá con cuidado si ya tenés otro shell/config armado encima de Hyprland (probado sobre
+[Caelestia Shell](https://github.com/caelestia-dots/caelestia): rompe cosas).** Las combinaciones
+probadas y que andan bien son: TTY limpia, TTY limpia + Hyprland pelado desde la distro, o Hyprland 
+con pocas configs propias ya encima. Cuanto más armado esté el sistema con configs de otro shell/dotfiles
+antes de instalar este repo, más probable que haya conflictos — si tenés algo así, lo más simple
+es reinstalar Hyprland limpio antes de seguir.
+
+Probado en dos máquinas distintas, funciona en ambas: notebook (Intel i5-8350U, gráfica integrada
+Intel) y PC de escritorio (Ryzen 7 5700X + RX 9070 XT).
 
 Orden correcto:
 
 1. **Sistema base instalado**, estás en una TTY.
+   (Paso 2 y 3 opcionales para asegurar o si no estas acostumbrado a la terminal, 
+   se puede saltar al 4 desde TTY)
 2. **Instalar Hyprland + UWSM + SDDM desde la distro**, mínimo, sin metapaquetes tipo
    `cachyos-hyprland-settings` (traen su propio waybar/tema/wallpapers, que no queremos):
-   ```bash
+```bash
    sudo pacman -S --needed hyprland uwsm xdg-desktop-portal-hyprland \
      qt5-wayland qt6-wayland polkit-gnome sddm kitty
    sudo systemctl enable sddm NetworkManager
    sudo reboot
-   ```
-3. En SDDM, elegir la sesión **"Hyprland (uwsm-managed)"** (no "Hyprland" a secas).
-4. Confirmar que UWSM sincroniza bien el entorno de por sí, antes de tocar nada:
-   ```bash
-   systemctl --user show-environment | grep -E "WAYLAND_DISPLAY|DBUS_SESSION"
-   uwsm-app -- kitty   # debería abrir una ventana nueva sin exportar nada a mano
-   ```
-5. Recién ahí, clonar este repo y correr `./install-all`.
+```
+   Con ese reboot alcanza — no hace falta loguear y verificar nada a mano antes de seguir, es
+   directo al paso 3.
+3. En SDDM, elegir la sesión **"Hyprland (uwsm-managed)"** (no "Hyprland" a secas). Esto sigue
+   aplicando siempre que no hayas configurado autologin — si lo hiciste (`bootstrap-system` te lo
+   pregunta), SDDM ya arranca directo con esa sesión sin pedirte elegir, así que el punto queda
+   resuelto solo. Si elegís "Hyprland" a secas en algún momento (sin UWSM), cosas se rompen.
+4. Recién ahí, clonar este repo y correr `./install-all`.
 
 ## Instalación
 
@@ -154,6 +162,29 @@ partir de ahí — sin el `.desktop` en ese path exacto, la unidad nunca existe 
 `elephant` no se symlinkea porque no viene con un `.service` fijo en el repo — trae su propio
 subcomando (`elephant service enable`) que genera y habilita su unidad.
 
+### Unidades systemd `--user`: se habilitan solas si tienen `[Install]`
+
+`symlink_systemd_units()` no solo symlinkea todo lo que haya en
+`common/.local/share/omarchy/config/systemd/user/` — también recorre esos `.service`/`.timer` y
+corre `systemctl --user enable` sobre cada uno. No hace falta tocar código para que una unidad
+nueva arranque sola: alcanza con que el archivo tenga una sección `[Install]` (típicamente
+`WantedBy=graphical-session.target` o similar).
+
+Comportamiento según el caso:
+
+- **Tiene `[Install]`** → se habilita automáticamente (`swayosd-server.service`,
+  `omarchy-recover-internal-monitor.service`, el `.timer` de `omarchy-battery-monitor`, etc.).
+- **No tiene `[Install]`** → `enable` tira *"has no installation config"* y el script lo loguea
+  como informativo, no como error. Es el caso normal de un `.service` que dispara *otra* unidad
+  (por ejemplo `omarchy-battery-monitor.service`, que lo activa su propio `.timer`, no
+  `systemctl enable` directo) — no hace falta habilitarlo aparte.
+- **Dropins (`app-walker@autostart.service.d/*.conf`)** — se symlinkean igual que cualquier otro
+  archivo del directorio, pero no entran en el loop de habilitación (no son unidades en sí).
+
+En la práctica: para agregar un daemon nuevo que arranque solo con la sesión, solo hace falta
+poner el `.service` (con `[Install]`) en `common/.local/share/omarchy/config/systemd/user/` y
+correr `./install-hyprchy` — se symlinkea y se habilita sin tocar el instalador.
+
 ### Editar la config después de instalado
 
 Como lo que queda symlinkeado en `$HOME` apunta a `merged/` (no al repo directo), los cambios que
@@ -264,6 +295,7 @@ config de monitores, y un par de scripts que leen paths de hardware hardcodeados
 (`waybar-cpu-watts`, `waybar-gpu` — hwmon es distinto por equipo). En vez de ramas de git
 separadas por máquina, la config vive en una sola rama, separada en dos árboles:
 
+```text
 common/                    # compartido entre TODAS las máquinas
 ├── .config/hypr/hyprland.lua, helpers.lua, bindings.lua, ...
 └── .local/bin/, .local/share/omarchy/, ...
@@ -272,9 +304,10 @@ hosts/
 ├── not-cloca/              # overrides SOLO para esta máquina (notebook)
 │   └── .config/hypr/monitors.lua
 └── pc-cloca/                # overrides SOLO para esta máquina (PC)
-├── .config/hypr/monitors.lua
-├── .local/bin/waybar-cpu-watts
-└── .local/bin/waybar-gpu
+    ├── .config/hypr/monitors.lua
+    ├── .local/bin/waybar-cpu-watts
+    └── .local/bin/waybar-gpu
+```
 
 `install-hyprchy` corre `build-merged` primero (detecta el hostname con `hostnamectl --static`,
 combina `common/` + `hosts/<hostname>/` en `merged/`), y symlinkea desde ahí — ver la sección
@@ -309,7 +342,9 @@ merged(o nombredir)/                         # GENERADO, puede estar gitignoread
 ## Troubleshooting rápido
 
 **`uwsm-app -- algo` tira "command not found"** — `~/.config/uwsm/env` no está seteado o no
-hiciste logout/login completo después de tocarlo. Mientras tanto: `./install-hyprchy --atomic-bin`.
+hiciste logout/login completo después de tocarlo.  Leer:
+[Red de seguridad de PATH](#red-de-seguridad-de-path---atomic-bin). Mientras tanto:
+`./install-hyprchy --atomic-bin`.
 
 **Walker no aplica tema / queda transparente** — revisá que `~/.config/omarchy/current/theme`
 resuelva a un tema real (`readlink -f ~/.config/omarchy/current/theme`), no a un symlink roto.
@@ -361,6 +396,12 @@ No se automatizó en el instalador a propósito — borrar conexiones de Network
 podría romper perfiles wifi que ya andaban bien en una instalación existente. Con Ethernet no
 debería pasar, no hay handshake de iwd/NetworkManager de por medio.
 
+**Vengo de Caelestia Shell (u otro shell/dotfiles ya armado sobre Hyprland) y algo no anda** —
+no está soportado instalar este repo encima de otro shell/config ya armado; en la práctica rompe
+cosas (probado con Caelestia Shell puntualmente). Lo más simple es reinstalar Hyprland limpio
+desde la distro (ver "Filosofía / orden de instalación" arriba) y recién ahí correr
+`./install-all`.
+
 **Cambié algo en `~/.config/...` y no aparece en `git status`** — estás editando `merged/` (o un
 symlink que apunta ahí), que está gitignoreado a propósito. Corré `./sync-to-repo` para bajar
 el cambio a `common/` o `hosts/<hostname>/` según corresponda.
@@ -370,10 +411,8 @@ apuntando a un `current/theme/mako.ini` que no existe. Definí `DEFAULT_THEME` e
 `install-hyprchy` y corré `theme-manager set <nombre tema> -w -k --hyprlock` a mano, o
 volvé a correr `./install-hyprchy` si ya lo definiste.
 
-
-**activar/desactivar autologin**
-
-Para activar autologin (se hace automatico en system-bootstrap): 
+**activar/desactivar autologin** - System-bootstrap te pregunta si queres activar el autologin
+durante la instalacion, si pusiste que no y queres activarlo: 
 
 ```bash
 sudo mkdir -p /etc/sddm.conf.d && sudo tee /etc/sddm.conf.d/autologin.conf >/dev/null <<EOF
@@ -382,7 +421,6 @@ User=$USER
 Session=hyprland-uwsm.desktop
 EOF
 ```
-
 Posteriormente se puede configurar el hyprlock para que bloquee la pantalla, ambos tienen temas 
 asi que es cuestion de elegir nomas.
 

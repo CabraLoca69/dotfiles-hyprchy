@@ -339,17 +339,35 @@ symlink_systemd_units() {
 
     mkdir -p "$HOME/.config/systemd/user"
     local found=false
+    local unit_names=()
     for unit in "$units_dir"/*; do
         [ -e "$unit" ] || continue
         found=true
         name="$(basename "$unit")"
         symlink "$unit" "$HOME/.config/systemd/user/$name"
+        # solo .service/.timer son habilitables — los .d/ (dropins) se symlinkean
+        # arriba pero no entran en el loop de habilitación
+        [[ "$name" == *.service || "$name" == *.timer ]] && unit_names+=("$name")
     done
 
     if [ "$found" = true ]; then
         systemctl --user daemon-reload
         info "systemd --user recargado."
     fi
+
+    # Habilitar automáticamente todo lo que declare [Install]. Las unidades sin
+    # [Install] (ej. un .service disparado únicamente por su propio .timer, o por
+    # otra unidad vía Requires/Wants) tiran "has no installation config" acá —
+    # es esperado, no es un fallo, no hace falta habilitarlas aparte.
+    for name in "${unit_names[@]}"; do
+        if systemctl --user is-enabled "$name" &>/dev/null; then
+            info "$name ya está habilitado."
+        elif systemctl --user enable "$name" &>/dev/null; then
+            info "$name habilitado."
+        else
+            info "$name no tiene [Install] propio (la dispara otra unidad, ej su .timer) — no hace falta habilitarla aparte."
+        fi
+    done
 }
 
 symlink_autostart_entries() {
@@ -416,21 +434,6 @@ enable_elephant() {
     else
         elephant service enable
         info "elephant.service habilitado."
-    fi
-}
-
-#setea el autostart para el filtro de luz azul
-enable_hyprsunset_daynight() {
-    section "Habilitando hyprsunset-daynight (ciclo día/noche automático)"
-    if ! systemctl --user list-unit-files hyprsunset-daynight.service &>/dev/null; then
-        warning "No encontré la unidad hyprsunset-daynight.service, salteando."
-        return
-    fi
-    if systemctl --user is-enabled hyprsunset-daynight.service &>/dev/null; then
-        info "hyprsunset-daynight.service ya está habilitado."
-    else
-        systemctl --user enable hyprsunset-daynight.service
-        info "hyprsunset-daynight.service habilitado (arranca solo con la sesión gráfica)."
     fi
 }
 
@@ -554,7 +557,6 @@ main() {
     symlink_autostart_entries
     symlink_walker_restart_dropin
     enable_elephant
-    enable_hyprsunset_daynight
     template_share_picker_config
     set_default_theme
 
