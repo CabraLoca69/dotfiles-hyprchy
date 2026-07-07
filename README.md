@@ -1,4 +1,8 @@
 # dotfiles-hyprchy
+> ⚠️ **Solo Arch Linux y derivados** (probado en CachyOS). Los instaladores usan `pacman`/`paru`/AUR
+> directamente — no van a andar en Ubuntu, Fedora, Debian, etc. sin reescribir la capa de
+> instalación de paquetes. Hyprland en sí no es exclusivo de Arch, pero este repo específicamente
+> asume ese ecosistema.
 
 Dotfiles personales de Hyprland, basadas en [Omarchy](https://github.com/basecamp/omarchy) pero
 desacopladas de su instalador — la idea es no traer el paquete completo de Omarchy (temas, apps,
@@ -56,6 +60,8 @@ timeout default de sudo). De ahí en más corre todo de punta a punta sin pregun
 **salvo** en `bootstrap-system`, donde sí hay un par de confirmaciones puntuales por tratarse de
 decisiones de seguridad (autologin de SDDM, habilitar `[multilib]`, integración de PAM con
 gnome-keyring).
+
+Podes leer la lista completa de dependecias aca:[Deps](https://github.com/CabraLoca69/dotfiles-hyprchy/blob/main/dependencies)
 
 Corre, en orden:
 

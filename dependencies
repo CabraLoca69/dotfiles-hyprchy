@@ -8,7 +8,7 @@
 # una vez que resuelvas lo que lo estaba colgando.
 
 PACMAN_DEPS=(
-    # Hyprland y compositor
+    # ── Core: Hyprland y compositor (NO opcional, todo lo demás depende de esto) ──
     uwsm
     hyprland
     hyprlock
@@ -21,61 +21,64 @@ PACMAN_DEPS=(
     qt6-wayland
     kitty
 
-    # Waybar y notificaciones
+    # ── Core: barra, notificaciones, audio ──
     waybar
     mako
     playerctl
     pamixer
     wireplumber
     wl-clipboard
-    calcurse
-    fcitx5
-    gum
 
-    # Terminal y shell
-    alacritty
-    fzf
-    jq
+    # ── Opcional: utilidades de terminal / shell (comentá lo que no uses) ──
+    calcurse         # lo usa la waybar
+    gum              # usado para omarchy-tz-select, se puede sacar.
+    fzf              # lo usa el gestor de wallpapers
+    jq               
     bat
     eza
     starship
     zoxide
     fastfetch
 
-    # Archivos y sistema
+    # ── Opcional: terminal alternativa ──
+    alacritty
+
+    # ── Opcional: archivos, capturas, wallpaper ──
     nautilus
     gvfs-mtp
     grim
     slurp
     swaybg
+
+    # ── Core: auth/keyring (sin esto, apps GUI piden contraseña seguido) ──
     polkit-gnome
     gnome-keyring
     libsecret
-    calcurse
+
+    # ── Opcional: utilidades varias de sistema/hardware ──
     bluetui
     impala
     chafa
-    jq
     brightnessctl
     swayosd
-    wiremix 
+    wiremix
 
-    # Fuentes
+    # ── Core: fuentes (iconos de waybar/walker dependen de la nerd font) ──
     noto-fonts
     noto-fonts-emoji
     ttf-jetbrains-mono-nerd
 )
 
 AUR_DEPS=(
-    elephant-all
-    xdg-terminal-exec
-    sunwait
-    hyprland-preview-share-picker-git
-    yaru-icon-theme
-    linux-wallpaperengine-git
+    elephant-all                          # backend de walker, core
+    xdg-terminal-exec                     # core, lo usan varios binds
+    sunwait                               # usado por hyprsunset-daynight
+    hyprland-preview-share-picker-git     # picker de share, opcional si no usás screen-share con preview
+    yaru-icon-theme                       # opcional, cosmético
+    linux-wallpaperengine-git             # opcional, solo si tenés Wallpaper Engine en Steam
 )
 
 CACHYOS_DEPS=(
-    paru
-    walker
+    paru                                    #necesario para instalar paquetes del AUR
+    walker                                  #necesario, sin esto no tenes menus
 )
