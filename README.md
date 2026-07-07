@@ -26,17 +26,21 @@ Intel) y PC de escritorio (Ryzen 7 5700X + RX 9070 XT).
 
 Orden correcto:
 
+Orden correcto:
+
 1. **Sistema base instalado**, estás en una TTY.
-   (Paso 2 y 3 opcionales para asegurar o si no estas acostumbrado a la terminal, 
-   se puede saltar al 4 desde TTY)
+   (Paso 2 y 3 opcionales para asegurar o si no estás acostumbrado a la terminal,
+   se puede saltar al 4 desde TTY.)
 2. **Instalar Hyprland + UWSM + SDDM desde la distro**, mínimo, sin metapaquetes tipo
    `cachyos-hyprland-settings` (traen su propio waybar/tema/wallpapers, que no queremos):
+
 ```bash
    sudo pacman -S --needed hyprland uwsm xdg-desktop-portal-hyprland \
      qt5-wayland qt6-wayland polkit-gnome sddm kitty
    sudo systemctl enable sddm NetworkManager
    sudo reboot
 ```
+
    Con ese reboot alcanza — no hace falta loguear y verificar nada a mano antes de seguir, es
    directo al paso 3.
 3. En SDDM, elegir la sesión **"Hyprland (uwsm-managed)"** (no "Hyprland" a secas). Esto sigue
