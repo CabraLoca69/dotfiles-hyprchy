@@ -26,10 +26,6 @@ Intel) y PC de escritorio (Ryzen 7 5700X + RX 9070 XT).
 
 Orden correcto:
 
-Orden correcto:
-
-Orden correcto:
-
 1. **Sistema base instalado**, estás en una TTY. (Paso 2 y 3 opcionales para asegurar o si no
    estás acostumbrado a la terminal, se puede saltar al 4 desde TTY.)
 
