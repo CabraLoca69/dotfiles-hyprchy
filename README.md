@@ -61,7 +61,7 @@ timeout default de sudo). De ahí en más corre todo de punta a punta sin pregun
 decisiones de seguridad (autologin de SDDM, habilitar `[multilib]`, integración de PAM con
 gnome-keyring).
 
-Podes leer la lista completa de dependecias aca:[Deps](https://github.com/CabraLoca69/dotfiles-hyprchy/blob/main/dependencies)
+Podes leer la lista completa de dependecias y comentar (#) lo que consideres antes de instalar: [Deps](https://github.com/CabraLoca69/dotfiles-hyprchy/blob/main/dependencies)
 
 Corre, en orden:
 
@@ -94,7 +94,8 @@ nueva sin tocar la que ya anda). Si no pasás nada, sigue siendo `merged/` como 
 ⚠️ Se bajan bastantes paquetes del AUR (repositorio de la comunidad, no oficial de Arch) durante
 `install-hyprchy`, con `--noconfirm --skipreview` (no pide confirmación por paquete ni pausa a
 revisar el `PKGBUILD`). Si te importa revisar cada uno antes de instalarlo, sacá esos flags del
-`paru -S` en el script y hacelo a mano la primera vez, tambien podes revisar la lista de dependencias.
+`paru -S` en el script y hacelo a mano la primera vez, tambien podes revisar la lista de dependencias
+aca : [Deps](https://github.com/CabraLoca69/dotfiles-hyprchy/blob/main/dependencies)
 
 ## Por qué tantas cosas necesitan un fix manual — UWSM y el entorno de la sesión
 
