@@ -41,7 +41,7 @@ install_pkgs() {
 
     info "Instalando: ${missing[*]}"
     if [ "$mgr" = "pacman" ]; then
-        sudo pacman -S --needed "${missing[@]}"
+        sudo pacman -S --needed --noconfirm "${missing[@]}"
     else
         if ! command -v paru &>/dev/null; then
             error "paru no encontrado, no puedo instalar paquetes AUR: ${missing[*]}"
@@ -164,7 +164,7 @@ enable_multilib() {
 
         if grep -q "^\[multilib\]" /etc/pacman.conf; then
             info "[multilib] habilitado."
-            sudo pacman -Sy
+            sudo pacman -Sy --noconfirm
         else
             error "No pude habilitarlo automáticamente. Editá /etc/pacman.conf a mano."
             MANUAL_NOTES+=("Habilitar [multilib] a mano en /etc/pacman.conf (descomentar el bloque) y correr 'sudo pacman -Sy'.")
