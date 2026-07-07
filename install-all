@@ -52,12 +52,32 @@ for f in "$INSTALL_SH" "$DRIVERS_SH" "$BOOTSTRAP_SH"; do
 done
 
 # ──────────────────────────────────────────────
-# Tema, al final si no no anda por alguna razon
+# sudo: pedir la contraseña una sola vez y mantenerla viva
 # ──────────────────────────────────────────────
+keep_sudo_alive() {
+    info "Pidiendo contraseña de sudo (una sola vez, se mantiene viva durante toda la instalación)."
+    sudo -v
+
+    # Refresca el timestamp cada 60s en background para que no expire
+    # a mitad de una instalación larga (AUR compilando, etc).
+    ( while true; do sudo -n true; sleep 60; kill -0 "$$" 2>/dev/null || exit; done ) &
+    SUDO_KEEPALIVE_PID=$!
+}
+
+stop_sudo_keepalive() {
+    if [ -n "${SUDO_KEEPALIVE_PID:-}" ]; then
+        kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+    fi
+}
 
 # ──────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────
+ask_yes_no() {
+    local answer
+    read -rp "$(echo -e "${YELLOW}?${NC} $1 [s/N]: ")" answer
+    [[ "$answer" =~ ^[sSyY]$ ]]
+}
 
 main() {
     echo -e "${CYAN}"
@@ -65,6 +85,18 @@ main() {
     echo "  │   install-all: instalación total     │"
     echo "  └─────────────────────────────────────┘"
     echo -e "${NC}"
+
+    warning "Esto instala paquetes, symlinkea dotfiles, instala drivers de CPU/GPU y"
+    warning "configura servicios del sistema. Una vez confirmado corre todo solo,"
+    warning "sin volver a preguntar (salvo las cuestiones de seguridad en bootstrap-system:"
+    warning "autologin, [multilib], PAM keyring)."
+    if ! ask_yes_no "¿Instalar ahora?"; then
+        info "Cancelado."
+        exit 0
+    fi
+    
+    keep_sudo_alive
+    trap stop_sudo_keepalive EXIT
 
     section "Paso 1: dotfiles (paru + deps + symlinks) — $INSTALL_SH"
     "$INSTALL_SH" "$@"

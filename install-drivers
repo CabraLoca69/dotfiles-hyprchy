@@ -54,13 +54,13 @@ install_pkgs() {
 
     info "Instalando: ${missing[*]}"
     if [ "$mgr" = "pacman" ]; then
-        sudo pacman -S --needed "${missing[@]}"
+        sudo pacman -S --needed --noconfirm "${missing[@]}"
     else
         if ! command -v paru &>/dev/null; then
             error "paru no encontrado, no puedo instalar paquetes AUR: ${missing[*]}"
             return
         fi
-        paru -S --needed "${missing[@]}"
+        paru -S --needed --noconfirm --skipreview "${missing[@]}"
     fi
 }
 
@@ -85,11 +85,7 @@ disable_cachyos_repo_temporarily() {
     fi
 
     warning "Repo [cachyos-v3] detectado — trae mesa-git, que conflictúa con mesa estándar."
-    if ! ask_yes_no "¿Deshabilitarlo temporalmente durante la instalación de drivers de GPU? (se restaura solo al terminar)"; then
-        warning "Seguí sin deshabilitar. Si pacman tira conflicto de mesa-git, comentá"
-        warning "[cachyos-v3] a mano en $PACMAN_CONF y volvé a correr este script."
-        return
-    fi
+    warning "Deshabilitándolo temporalmente durante la instalación de drivers (se restaura solo al terminar)."
 
     sudo cp "$PACMAN_CONF" "$PACMAN_CONF_BAK"
     sudo sed -i '/^\[cachyos-v3\]/,/^Include/s/^/#/' "$PACMAN_CONF"
@@ -220,14 +216,24 @@ install_intel_gpu() {
 # ──────────────────────────────────────────────
 # GPU: NVIDIA
 # ──────────────────────────────────────────────
+detect_nvidia_variant() {
+    local gpu_name
+    gpu_name="$(lspci -nnk | grep -Ei "VGA|3D controller" | grep -i nvidia | head -1)"
+
+    if echo "$gpu_name" | grep -qEi "RTX|TITAN RTX|GTX 16[0-9]{2}|Quadro (RTX|T[0-9])|Tesla T4|A[0-9]{3,4}0"; then
+        echo "nvidia-open-dkms"
+    else
+        echo "nvidia-dkms"
+    fi
+}
 
 install_nvidia_gpu() {
     section "Drivers NVIDIA"
 
-    local variant="nvidia-dkms"
-    if ask_yes_no "¿Tu GPU es Turing (RTX 20xx) o más nueva? (permite usar el módulo open-source nvidia-open-dkms)"; then
-        variant="nvidia-open-dkms"
-    fi
+    local variant
+    variant="$(detect_nvidia_variant)"
+    info "Variante elegida automáticamente: $variant"
+    MANUAL_NOTES+=("Se detectó '$variant' según el modelo de GPU (lspci). Si la GPU no se identificó bien, reinstalá a mano: sudo pacman -S nvidia-open-dkms (Turing/RTX+) o nvidia-dkms (más vieja).")
 
     local pkgs=("$variant" nvidia-utils egl-wayland libva-nvidia-driver)
 

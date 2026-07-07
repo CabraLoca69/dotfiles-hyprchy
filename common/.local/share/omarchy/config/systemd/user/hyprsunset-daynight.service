@@ -1,0 +1,11 @@
+[Unit]
+Description=Cicle day/night for hyprsunset
+After=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/hyprsunset_daynight
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
