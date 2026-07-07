@@ -68,7 +68,7 @@ source "$DEPENDENCIES_FILE"
 # ──────────────────────────────────────────────
 # paru
 # ──────────────────────────────────────────────
-
+# se instala paru desde repos de cachyos o se compila, paru-git tira tira conflicto con libalpm de vez en cuando. (complicado de debuguear/solucionar mejor evitarlo)
 install_paru() {
     section "paru"
 
@@ -171,28 +171,54 @@ install_cachyos_deps() {
     fi
 }
 
+
+#se inicia starship ya que estamos detectando el shell
 setup_path() {
     section "Configurando PATH (shell interactiva)"
 
     local shell_rc=""
+    local path_line=""
+    local starship_line=""
+
     if [[ "$SHELL" == *"fish"* ]]; then
         shell_rc="$HOME/.config/fish/config.fish"
-        local path_line="fish_add_path \$HOME/.local/bin"
+        path_line='fish_add_path $HOME/.local/bin'
+        starship_line='starship init fish | source'
     elif [[ "$SHELL" == *"zsh"* ]]; then
         shell_rc="$HOME/.zshrc"
-        local path_line='export PATH="$HOME/.local/bin:$PATH"'
+        path_line='export PATH="$HOME/.local/bin:$PATH"'
+        starship_line='eval "$(starship init zsh)"'
     else
         shell_rc="$HOME/.bashrc"
-        local path_line='export PATH="$HOME/.local/bin:$PATH"'
+        path_line='export PATH="$HOME/.local/bin:$PATH"'
+        starship_line='eval "$(starship init bash)"'
     fi
 
-    if grep -q "\.local/bin" "$shell_rc" 2>/dev/null; then
+    # PATH
+    if grep -qF "$path_line" "$shell_rc" 2>/dev/null; then
         info "PATH ya configurado en $shell_rc"
     else
         echo "$path_line" >> "$shell_rc"
         info "PATH agregado a $shell_rc"
-        warning "Reiniciá la shell o ejecutá: source $shell_rc"
     fi
+
+    # Starship
+    if command -v starship &>/dev/null; then
+        if grep -qF "starship init" "$shell_rc" 2>/dev/null; then
+            info "Starship ya configurado en $shell_rc"
+        else
+            {
+                echo ""
+                echo "# Starship prompt"
+                echo "$starship_line"
+            } >> "$shell_rc"
+            info "Starship agregado a $shell_rc"
+        fi
+    else
+        warning "Starship no está instalado, se omite la configuración del prompt"
+    fi
+
+    warning "Reiniciá la shell o ejecutá: source $shell_rc"
 }
 
 setup_uwsm_env() {
@@ -309,6 +335,10 @@ symlink_systemd_units() {
     fi
 }
 
+# walker.desktop tiene que estar en ~/.config/autostart/ para que el
+# generador de systemd (xdg-desktop-autostart-generator) le arme la unidad
+# transitoria app-walker@autostart.service solo. Sin este symlink, walker
+# nunca termina de arrancar bien y omarchy-restart-walker falla.
 symlink_autostart_entries() {
     section "Symlinks de autostart XDG"
 
@@ -421,8 +451,8 @@ set_default_theme() {
 
     # Estos sí funcionan sin DE vivo — solo crean symlinks.
     # se usa path desde el home, todavia no se efectua la declaracion de $PATH, no reconoce el comando directo.
-    ~/.local/bin/theme-manager waybar "$DEFAULT_THEME" -q
-    ~/.local/bin/theme-manager hyprlock "$DEFAULT_THEME" -q
+    $HOME/.local/bin/theme-manager waybar "$DEFAULT_THEME" -q
+    $HOME/.local/bin/theme-manager hyprlock "$DEFAULT_THEME" -q
     info "waybar y hyprlock apuntando a '$DEFAULT_THEME'."
 }
 

@@ -72,14 +72,12 @@ ask_yes_no() {
 }
 
 # ──────────────────────────────────────────────
-# Conflicto [cachyos] vs mesa estándar
+# Conflicto [cachyos-v3] vs mesa estándar
 # ──────────────────────────────────────────────
 #
-# El repo [cachyos] trae mesa-git (y variantes -git de vulkan-*), que
+# El repo [cachyos-v3] trae mesa-git (y variantes -git de vulkan-*), que
 # conflictúa con los paquetes mesa/vulkan-* estándar que este script instala
 # según la GPU detectada. pacman se niega a instalar y aborta.
-#
-
 
 disable_cachyos_repo_temporarily() {
     if ! is_cachyos_repo_enabled; then
