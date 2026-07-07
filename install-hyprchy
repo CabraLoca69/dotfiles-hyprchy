@@ -21,10 +21,30 @@
 
 set -e
 
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-DEFAULT_THEME="event-horizon"
-MERGED_DIR="$DOTFILES_DIR/merged"
+DEFAULT_THEME="event-horizon" #tema por defecto.
 
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MERGED_DIR="$DOTFILES_DIR/merged" #directorio donde sale la instalacion
+# ──────────────────────────────────────────────
+# Nombre del dir de merge (opcional)
+# ──────────────────────────────────────────────
+# ./install-hyprchy              -> $DOTFILES_DIR/merged
+# ./install-hyprchy nombredir    -> $DOTFILES_DIR/nombredir
+# ./install-hyprchy --atomic-bin -> sigue siendo la flag, no un nombre de dir
+MERGED_NAME="merged"
+for arg in "$@"; do
+    case "$arg" in
+        --atomic-bin) ;;               # es flag, no nombre de dir
+        *) MERGED_NAME="$arg" ;;       # cualquier otra cosa = nombre de dir
+    esac
+done
+MERGED_DIR="$DOTFILES_DIR/$MERGED_NAME"
+
+#crear dir merged:
+create_merged_dir(){   
+    chmod +x $DOTFILES_DIR/build-merged
+    "$DOTFILES_DIR/build-merged" "$MERGED_NAME"
+}
 
 # Colores
 GREEN='\033[0;32m'
@@ -466,12 +486,6 @@ set_default_theme() {
     info "waybar y hyprlock apuntando a '$DEFAULT_THEME'."
 }
 
-
-#crear dir merged:
-create_merged_dir(){   
-    chmod +x $DOTFILES_DIR/build-merged
-    "$DOTFILES_DIR/build-merged"
-}
 
 # ──────────────────────────────────────────────
 # Templating de configs con paths absolutos
