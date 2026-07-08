@@ -1,9 +1,9 @@
 #!/bin/bash
-if pgrep -f "hyprsunset_daynight" > /dev/null; then
-    pkill -f "hyprsunset_daynight"
+if systemctl --user is-active --quiet hyprsunset-daynight.service; then
+    systemctl --user stop hyprsunset-daynight.service
     hyprsunset -t 6000
     notify-send -u low "   Nightlight automático desactivado"
 else
-    bash ~/.local/bin/hyprsunset_daynight.sh &
+    systemctl --user start hyprsunset-daynight.service
     notify-send -u low "  Nightlight automático activado"
 fi

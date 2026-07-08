@@ -1,4 +1,8 @@
+#!/bin/bash
+theme-manager hyprlock "$1"
+cat > ~/.config/hypr/hyprlock.conf <<'EOF'
 source = ~/.config/omarchy/current/theme/hyprlock.conf
 auth {
     fingerprint:enabled = true
 }
+EOF
