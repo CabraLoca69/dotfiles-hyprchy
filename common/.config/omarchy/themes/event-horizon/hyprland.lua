@@ -24,7 +24,7 @@ hl.config({
     	},
     	border_size = 2,
     	gaps_in = 2,
-    	gaps_out = 8,
+    	gaps_out = 6,
   		},
 	group = {
 		col = {

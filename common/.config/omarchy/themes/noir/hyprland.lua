@@ -18,8 +18,8 @@ hl.config({
 			inactive_border = inactiveBorderColor,
 		},
 		border_size = 2,
-		gaps_in = 7,
-		gaps_out = 22,
+		gaps_in = 1,
+		gaps_out = 2,
 	},
 	group = {
 		col = {
@@ -32,7 +32,7 @@ hl.config({
 		dim_inactive = true,
 		dim_strength = 0.20,
 		--active_opacity = 1.0,
-		inactive_opacity = 0.93,
+		inactive_opacity = 0.98,
 		blur = {
 			enabled = true,
 			size = 2,
