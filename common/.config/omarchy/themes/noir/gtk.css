@@ -1,0 +1,317 @@
+/**
+ * Noir Theme with Sharp Corners (Hyprland-inspired)
+ * GTK4/Adwaita Custom Styling
+ */
+
+/* Dynamic color palette from Noir */
+@define-color base00 #080706;
+@define-color base01 #18130f;
+@define-color base02 #2d251f;
+@define-color base03 #6f665f;
+@define-color base04 #8d8177;
+@define-color base05 #9e9286;
+@define-color base06 #d0c3b4;
+@define-color base07 #f7f1ea;
+@define-color base08 #96423c;
+@define-color base09 #a5342f;
+@define-color base0A #a67a43;
+@define-color base0B #51604f;
+@define-color base0C #8c6f4b;
+@define-color base0D #5a6674;
+@define-color base0E #7b5a6a;
+@define-color base0F #7a5138;
+@define-color base10 #040302;
+@define-color base11 #010101;
+@define-color base12 #a5342f;
+@define-color base13 #c08b4a;
+@define-color base14 #667863;
+@define-color base15 #c4ab84;
+@define-color base16 #7a8796;
+@define-color base17 #967284;
+
+@define-color background @base00;
+@define-color foreground @base06;
+
+@define-color black @base00;
+@define-color red @base08;
+@define-color green @base0B;
+@define-color yellow @base0A;
+@define-color blue @base0D;
+@define-color magenta @base0E;
+@define-color cyan @base0C;
+@define-color white @base05;
+@define-color bright_black @base03;
+@define-color bright_red @base12;
+@define-color bright_green @base14;
+@define-color bright_yellow @base13;
+@define-color bright_blue @base16;
+@define-color bright_magenta @base17;
+@define-color bright_cyan @base15;
+@define-color bright_white @base07;
+
+/* Adwaita Color Overrides */
+@define-color accent_bg_color @blue;
+@define-color accent_fg_color @bright_white;
+@define-color accent_color @bright_blue;
+
+@define-color window_bg_color @base00;
+@define-color window_fg_color @foreground;
+
+/* Sidebar background and content */
+@define-color view_bg_color @base01;
+@define-color view_fg_color @foreground;
+@define-color sidebar_bg_color @base00;
+@define-color sidebar_fg_color @foreground;
+@define-color sidebar_backdrop_color @base00;
+@define-color sidebar_shade_color @base00;
+
+@define-color headerbar_bg_color @base00;
+@define-color headerbar_fg_color @foreground;
+@define-color headerbar_backdrop_color @base00;
+@define-color headerbar_shade_color @base00;
+@define-color card_bg_color @base01;
+@define-color card_fg_color @foreground;
+
+@define-color popover_bg_color @base01;
+@define-color popover_fg_color @foreground;
+
+@define-color destructive_bg_color @red;
+@define-color destructive_fg_color @bright_white;
+
+@define-color success_bg_color @green;
+@define-color success_fg_color @bright_white;
+
+@define-color warning_bg_color @yellow;
+@define-color warning_fg_color @background;
+
+@define-color error_bg_color @red;
+@define-color error_fg_color @bright_white;
+
+@define-color dialog_bg_color @base00;
+@define-color dialog_fg_color @foreground;
+
+@define-color borders alpha(@foreground, 0.18);
+
+/* GTK3 Adwaita Legacy Color Variables */
+@define-color theme_fg_color @foreground;
+@define-color theme_text_color @foreground;
+@define-color theme_bg_color @base00;
+@define-color theme_base_color @base01;
+@define-color theme_selected_bg_color @blue;
+@define-color theme_selected_fg_color @bright_white;
+@define-color insensitive_bg_color @base00;
+@define-color insensitive_fg_color @bright_black;
+@define-color insensitive_base_color @black;
+@define-color theme_unfocused_fg_color @foreground;
+@define-color theme_unfocused_text_color @foreground;
+@define-color theme_unfocused_bg_color @base00;
+@define-color theme_unfocused_base_color @base01;
+@define-color theme_unfocused_selected_bg_color @blue;
+@define-color theme_unfocused_selected_fg_color @bright_white;
+@define-color unfocused_insensitive_color @bright_black;
+@define-color unfocused_borders alpha(@foreground, 0.12);
+@define-color warning_color @yellow;
+@define-color error_color @red;
+@define-color success_color @green;
+@define-color destructive_color @red;
+
+/* Content View Colors */
+@define-color content_view_bg @base01;
+@define-color text_view_bg @base01;
+
+/* GtkMessageDialog styling */
+/* Target the entire dialog's background */
+messagedialog {
+    background-color: @dialog_bg_color;
+    border: 1px solid alpha(@yellow, 0.35);
+    box-shadow: inset 0 1px alpha(@foreground, 0.03);
+}
+
+/* Target the main message label inside the dialog */
+messagedialog label {
+    color: @dialog_fg_color;
+    font-size: 14pt;
+    font-weight: bold;
+}
+
+/* Target the secondary, more detailed text (if any) */
+messagedialog .secondary-text {
+    font-size: 10pt;
+    font-style: italic;
+}
+
+/* Target the buttons in the dialog's action area */
+messagedialog button {
+    background-color: @base01;
+    color: @foreground;
+    border: 1px solid alpha(@foreground, 0.14);
+    padding: 10px;
+}
+
+messagedialog button:hover {
+    background-color: alpha(@yellow, 0.22);
+    color: @bright_white;
+    border-color: alpha(@yellow, 0.38);
+}
+
+banner revealer widget {
+    background: @bright_black;
+    border-left: 2px solid @yellow;
+    padding: 5px;
+    color: @foreground;
+}
+
+/* GtkAlertDialog styling */
+alertdialog.background {
+    background-color: @dialog_bg_color;
+    color: @dialog_fg_color;
+}
+
+alertdialog .titlebar {
+    background-color: @headerbar_bg_color;
+    color: @headerbar_fg_color;
+}
+
+alertdialog box {
+    background-color: @dialog_bg_color;
+}
+
+alertdialog label {
+    color: @dialog_fg_color;
+}
+
+filechooser .dialog-action-box {
+    border-top: 1px solid @bright_black;
+}
+
+filechooser .dialog-action-box:backdrop {
+    border-top-color: @black;
+}
+
+filechooser #pathbarbox {
+    border-bottom: 1px solid @bright_black;
+}
+
+filechooserbutton:drop(active) {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+toast {
+    background-color: @black;
+    color: @foreground;
+    border-left: 2px solid @yellow;
+    box-shadow: inset 0 1px alpha(@foreground, 0.03);
+}
+
+toast button.circular.flat.image-button:hover {
+    color: @background;
+    background-color: @red;
+}
+
+/* Sharp corners, Hyprland-inspired */
+* {
+    border-radius: 0;
+}
+
+window,
+dialog,
+messagedialog.background,
+alertdialog.background {
+    background-color: @window_bg_color;
+    box-shadow: inset 0 1px alpha(@foreground, 0.03);
+}
+
+headerbar,
+.titlebar,
+toolbar {
+    background-color: @headerbar_bg_color;
+    border-bottom: 1px solid alpha(@foreground, 0.08);
+    box-shadow: inset 0 -1px alpha(@foreground, 0.03);
+}
+
+sidebar,
+navigation-sidebar,
+scrolledwindow undershoot.left,
+scrolledwindow undershoot.right {
+    background-color: @sidebar_bg_color;
+}
+
+popover,
+menu,
+.context-menu {
+    background-color: @popover_bg_color;
+    border: 1px solid alpha(@foreground, 0.12);
+    box-shadow: inset 0 1px alpha(@foreground, 0.03);
+}
+
+card,
+.card {
+    background-color: @card_bg_color;
+    border: 1px solid alpha(@foreground, 0.08);
+    box-shadow: inset 0 1px alpha(@foreground, 0.025);
+}
+
+entry,
+searchbar entry,
+spinbutton,
+combobox box,
+dropdown button {
+    background-color: @base01;
+    color: @foreground;
+    border: 1px solid alpha(@foreground, 0.12);
+    box-shadow: inset 0 1px alpha(@foreground, 0.025);
+}
+
+entry:focus,
+searchbar entry:focus,
+spinbutton:focus,
+combobox box:focus-within,
+dropdown button:focus {
+    border-color: alpha(@yellow, 0.55);
+    box-shadow: inset 0 0 0 1px alpha(@yellow, 0.18);
+}
+
+button {
+    background-color: @base01;
+    color: @foreground;
+    border: 1px solid alpha(@foreground, 0.1);
+    box-shadow: inset 0 1px alpha(@foreground, 0.025);
+}
+
+button:hover {
+    background-color: @base02;
+    color: @bright_white;
+    border-color: alpha(@yellow, 0.24);
+}
+
+button:checked,
+button:active,
+tabbar tab:selected,
+list row:selected,
+row:selected {
+    background-color: alpha(@yellow, 0.18);
+    color: @bright_white;
+    border-color: alpha(@yellow, 0.32);
+}
+
+button:checked,
+button:active {
+    color: @bright_white;
+}
+
+button.suggested-action,
+button.suggested-action:hover,
+button.suggested-action:active {
+    background-color: @yellow;
+    color: @background;
+    border-color: alpha(@bright_yellow, 0.65);
+}
+
+button.destructive-action,
+button.destructive-action:hover,
+button.destructive-action:active {
+    background-color: @red;
+    color: @bright_white;
+    border-color: alpha(@bright_red, 0.65);
+}

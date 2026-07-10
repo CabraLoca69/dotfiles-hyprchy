@@ -1,0 +1,313 @@
+/**
+ * @name Noir System24
+ * @author OldJobobo, refact0r
+ * @version 0.2.0
+ * @description Noir Base24 colors on top of refact0r/system24.
+ * @source https://github.com/refact0r/system24
+ */
+
+@import url("https://refact0r.github.io/system24/build/system24.css");
+
+body {
+    --font: "DM Mono";
+    --code-font: "DM Mono";
+    font-weight: 300;
+    letter-spacing: -0.04ch;
+
+    --gap: 10px;
+    --divider-thickness: 3px;
+    --border-thickness: 2px;
+    --border-hover-transition: 160ms ease;
+
+    --animations: on;
+    --list-item-transition: 140ms ease;
+    --dms-icon-svg-transition: 240ms ease;
+
+    --top-bar-height: var(--gap);
+    --top-bar-button-position: titlebar;
+    --top-bar-title-position: off;
+    --subtle-top-bar-title: on;
+
+    --custom-window-controls: off;
+    --window-control-size: 14px;
+
+    --custom-dms-icon: off;
+    --dms-icon-svg-url: url("");
+    --dms-icon-svg-size: 90%;
+    --dms-icon-color-before: var(--icon-subtle);
+    --dms-icon-color-after: var(--base07);
+    --custom-dms-background: color;
+    --dms-background-image-url: url("");
+    --dms-background-image-size: cover;
+    --dms-background-color: linear-gradient(
+        135deg,
+        var(--base00),
+        var(--base08) 42%,
+        var(--base13) 72%,
+        var(--base0D)
+    );
+
+    --background-image: off;
+    --background-image-url: url("");
+    --transparency-tweaks: off;
+    --remove-bg-layer: off;
+    --panel-blur: off;
+    --blur-amount: 12px;
+    --bg-floating: var(--bg-3);
+
+    --small-user-panel: on;
+    --unrounding: on;
+    --custom-spotify-bar: on;
+    --custom-chatbar: separated;
+    --chatbar-height: 54px;
+    --ascii-titles: on;
+    --ascii-loader: system24;
+
+    --panel-labels: on;
+    --label-color: var(--base04);
+    --label-hover-color: var(--base13);
+    --label-font-weight: 500;
+}
+
+:root {
+    --base00: #080706;
+    --base01: #18130f;
+    --base02: #2d251f;
+    --base03: #6f665f;
+    --base04: #8d8177;
+    --base05: #9e9286;
+    --base06: #d0c3b4;
+    --base07: #f7f1ea;
+    --base08: #96423c;
+    --base09: #a5342f;
+    --base0A: #a67a43;
+    --base0B: #51604f;
+    --base0C: #8c6f4b;
+    --base0D: #5a6674;
+    --base0E: #7b5a6a;
+    --base0F: #7a5138;
+    --base10: #040302;
+    --base11: #010101;
+    --base12: #a5342f;
+    --base13: #c08b4a;
+    --base14: #667863;
+    --base15: #c4ab84;
+    --base16: #7a8796;
+    --base17: #967284;
+
+    --colors: on;
+
+    --text-0: var(--base00);
+    --text-1: var(--base07);
+    --text-2: var(--base06);
+    --text-3: var(--base05);
+    --text-4: var(--base04);
+    --text-5: var(--base03);
+
+    --bg-1: var(--base02);
+    --bg-2: var(--base01);
+    --bg-3: var(--base10);
+    --bg-4: var(--base00);
+    --hover: color-mix(in srgb, var(--base02), transparent 28%);
+    --active: color-mix(in srgb, var(--base0A), transparent 78%);
+    --active-2: color-mix(in srgb, var(--base13), transparent 68%);
+    --message-hover: color-mix(in srgb, var(--base01), transparent 24%);
+
+    --accent-1: var(--base13);
+    --accent-2: var(--base0A);
+    --accent-3: var(--base0F);
+    --accent-4: var(--base09);
+    --accent-5: var(--base08);
+    --accent-new: var(--base12);
+
+    --mention: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--base0A), transparent 72%) 0,
+        color-mix(in srgb, var(--base08), transparent 88%) 46%,
+        transparent 100%
+    );
+    --mention-hover: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--base13), transparent 68%) 0,
+        color-mix(in srgb, var(--base08), transparent 84%) 46%,
+        transparent 100%
+    );
+    --reply: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--base0D), transparent 78%) 0,
+        transparent 58%
+    );
+    --reply-hover: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--base16), transparent 72%) 0,
+        transparent 58%
+    );
+
+    --online: var(--base14);
+    --dnd: var(--base12);
+    --idle: var(--base13);
+    --streaming: var(--base17);
+    --offline: var(--base04);
+    --unread-channel: var(--base15);
+    --unread-channel-strong: var(--base13);
+    --unread-channel-bg: color-mix(in srgb, var(--base0A), transparent 86%);
+
+    --border-light: color-mix(in srgb, var(--base03), transparent 62%);
+    --border: color-mix(in srgb, var(--base03), transparent 38%);
+    --border-hover: var(--base13);
+    --button-border: color-mix(in srgb, var(--base06), transparent 86%);
+
+    --red-1: var(--base12);
+    --red-2: var(--base08);
+    --red-3: var(--base09);
+    --red-4: var(--base0F);
+    --red-5: var(--base00);
+
+    --green-1: var(--base15);
+    --green-2: var(--base14);
+    --green-3: var(--base0B);
+    --green-4: var(--base02);
+    --green-5: var(--base10);
+
+    --blue-1: var(--base16);
+    --blue-2: var(--base0D);
+    --blue-3: var(--base0C);
+    --blue-4: var(--base02);
+    --blue-5: var(--base10);
+
+    --yellow-1: var(--base07);
+    --yellow-2: var(--base13);
+    --yellow-3: var(--base0A);
+    --yellow-4: var(--base0F);
+    --yellow-5: var(--base10);
+
+    --purple-1: var(--base17);
+    --purple-2: var(--base0E);
+    --purple-3: var(--base0F);
+    --purple-4: var(--base02);
+    --purple-5: var(--base10);
+
+    --color00: var(--base00);
+    --color01: var(--base08);
+    --color02: var(--base0B);
+    --color03: var(--base0A);
+    --color04: var(--base0D);
+    --color05: var(--base0E);
+    --color06: var(--base0C);
+    --color07: var(--base05);
+    --color08: var(--base03);
+    --color09: var(--base12);
+    --color10: var(--base14);
+    --color11: var(--base13);
+    --color12: var(--base16);
+    --color13: var(--base17);
+    --color14: var(--base15);
+    --color15: var(--base07);
+}
+
+/* Noir accents over system24's TUI frame. */
+.visual-refresh {
+    --background-base-lowest: var(--base11);
+    --background-base-lower: var(--base10);
+    --background-base-low: var(--base00);
+    --background-surface-high: var(--base01);
+    --background-surface-higher: var(--base02);
+    --background-modifier-hover: var(--hover);
+    --background-modifier-selected: var(--active);
+    --channels-default-unread: var(--unread-channel);
+    --brand-360: var(--base13);
+    --brand-500: var(--base0A);
+    --text-muted: var(--base04);
+    --text-normal: var(--base05);
+    --text-primary: var(--base06);
+    --header-primary: var(--base07);
+}
+
+/* Keep the noir dossier feel: thin gold edge, dark panels, no soft cards. */
+.visual-refresh :is(
+    .guilds__5e434,
+    .panels__5e434,
+    .sidebarList__5e434,
+    .subtitleContainer_f75fb0,
+    .messagesWrapper__36d07,
+    .channelTextArea_f75fb0,
+    .container_c8ffbb,
+    .peopleColumn__133bf,
+    .nowPlayingColumn__133bf,
+    .callContainer_cb9592
+) {
+    box-shadow:
+        inset 1px 0 color-mix(in srgb, var(--base13), transparent 58%),
+        inset 0 1px color-mix(in srgb, var(--base06), transparent 94%);
+}
+
+.visual-refresh :is(
+    .wrapper__2ea32,
+    .channel__972a0,
+    .member__5d473,
+    .interactive_bf202d
+):hover {
+    color: var(--base06);
+}
+
+.visual-refresh :is(
+    .modeSelected__2ea32 .link__2ea32,
+    .selected_bf202d,
+    .selected__91a9d,
+    .interactiveSelected_bf202d
+) {
+    color: var(--base07);
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--base0A), transparent 72%),
+        color-mix(in srgb, var(--base02), transparent 12%) 38%,
+        transparent 100%
+    );
+}
+
+/* Unread channels: semantic attention without using error red. */
+.visual-refresh :is(
+    [class*="modeUnread"] .link__2ea32,
+    a[data-list-item-id^="channels___"][class*="modeUnread"],
+    a[data-list-item-id^="threads___"][class*="modeUnread"]
+) {
+    background: linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--unread-channel-strong), transparent 72%) 0,
+        var(--unread-channel-bg) 42%,
+        transparent 100%
+    ) !important;
+    box-shadow: inset 0 1px color-mix(in srgb, var(--base06), transparent 94%);
+}
+
+.visual-refresh :is(
+    #channels [class*="modeUnread"] [class*="name__"],
+    [class*="modeUnread"] [class*="name"],
+    [class*="modeUnread"] [class*="name"] *
+) {
+    color: var(--unread-channel) !important;
+    font-weight: 600;
+    text-shadow: 0 0 10px color-mix(in srgb, var(--unread-channel-strong), transparent 72%);
+}
+
+.visual-refresh :is(
+    [class*="modeUnread"] [class*="icon__"],
+    [class*="modeUnread"] [class*="icon__"] path,
+    a[data-list-item-id^="channels___"][class*="modeUnread"] svg,
+    a[data-list-item-id^="channels___"][class*="modeUnread"] svg path
+) {
+    color: var(--unread-channel-strong) !important;
+    fill: var(--unread-channel-strong) !important;
+}
+
+.visual-refresh :is(
+    .unread__2ea32,
+    .unreadImportant__2ea32,
+    [class*="unread__"][class*="unreadImportant"]
+) {
+    background-color: var(--unread-channel-strong) !important;
+}
+
+.visual-refresh :is(a, .anchor_edefb8) {
+    color: var(--base13);
+}

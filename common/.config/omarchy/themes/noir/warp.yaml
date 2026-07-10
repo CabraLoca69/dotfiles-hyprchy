@@ -1,0 +1,26 @@
+name: Noir
+accent: "#7a8796"
+cursor: "#d0c3b4"
+background: "#080706"
+foreground: "#d0c3b4"
+details: darker
+
+terminal_colors:
+  normal:
+    black:   "#080706"
+    red:     "#96423c"
+    green:   "#51604f"
+    yellow:  "#a67a43"
+    blue:    "#5a6674"
+    magenta: "#7b5a6a"
+    cyan:    "#8c6f4b"
+    white:   "#9e9286"
+  bright:
+    black:   "#6f665f"
+    red:     "#a5342f"
+    green:   "#667863"
+    yellow:  "#c08b4a"
+    blue:    "#7a8796"
+    magenta: "#967284"
+    cyan:    "#c4ab84"
+    white:   "#f7f1ea"

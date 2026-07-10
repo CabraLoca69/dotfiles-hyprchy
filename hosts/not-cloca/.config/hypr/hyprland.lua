@@ -51,17 +51,8 @@ hl.window_rule({
 
 hl.window_rule({
   match = {initial_title = "Terminal"}, 
-  tag = '-floating-window*',
-  opacity = "0.9 0.8",
-  size = {900, 600}
+  opacity = "0.9 0.8"
 })
 
---code
-hl.window_rule({
-  match = {initial_class =  "code-oss"},
-  float = true,
-  pin = true,
-  size = {900, 700}
-})
 
 

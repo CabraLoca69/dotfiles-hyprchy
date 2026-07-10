@@ -445,8 +445,12 @@ Este repo no parte de cero — toma prestado y adapta trabajo de varios proyecto
 - **[Omarchy](https://github.com/basecamp/omarchy)** (Basecamp/DHH) — base conceptual y buena
   parte de la estructura de config de Hyprland/waybar/walker/temas de la que parte este repo,
   aunque desacoplada de su instalador (ver introducción arriba).
-- **Waybars y temas** — [OldJobobo](https://github.com/OldJobobo) y
-  [HANCORE](https://github.com/HANCORE-linux) 
+
 - **[linux-wallpaperengine](https://github.com/Almamu/linux-wallpaperengine)** (Almamu) — usado
   opcionalmente para correr wallpapers de Wallpaper Engine (Steam) en Linux.
   No se distribuye en este repo; se instala como dependencia AUR
+
+- **Waybars y temas** — [OldJobobo](https://github.com/OldJobobo) y
+  [HANCORE](https://github.com/HANCORE-linux) 
+  
+- **Temas de walker** - [rahulkumarparida](https://github.com/rahulkumarparida/Walker-themes)

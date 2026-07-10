@@ -251,6 +251,13 @@ setup_uwsm_env() {
         cat >> "$env_file" << 'EOF'
 export OMARCHY_PATH=$HOME/.local/share/omarchy
 export PATH="$HOME/.local/bin:$OMARCHY_PATH/bin:$PATH"
+
+# Carga TERMINAL/EDITOR/BROWSER y demás defaults (ver ~/.config/uwsm/default,
+# symlinkeado desde common/.config/uwsm/default)
+source ~/.config/uwsm/default
+
+# Activa mise (si está instalado) para que uwsm-app vea sus shims
+omarchy-cmd-present mise && eval "$(mise activate bash --shims)"
 EOF
         info "$env_file actualizado."
         warning "Esto solo lo lee uwsm al arrancar la sesión gráfica — hace falta"
@@ -270,8 +277,8 @@ setup_xdg_terminal() {
     fi
 
     cat > "$list_file" << 'EOF'
-Alacritty.desktop
 kitty.desktop
+Alacritty.desktop
 EOF
     info "$list_file configurado (Alacritty como default, kitty como fallback)."
     warning "Ajustá el orden/contenido si usás otro terminal — xdg-terminal-exec usa"
@@ -478,7 +485,10 @@ set_default_theme() {
 
     "$theme_manager" waybar "$DEFAULT_THEME" -q
     "$theme_manager" hyprlock "$DEFAULT_THEME" -q
-    info "waybar y hyprlock apuntando a '$DEFAULT_THEME'."
+    mkdir -p "$HOME/.config/btop/themes"
+    symlink "$theme_current/btop.theme" "$HOME/.config/btop/themes/current.theme"
+
+    info "waybar, hyprlock y btop apuntando a '$DEFAULT_THEME'."
 }
 
 # ──────────────────────────────────────────────

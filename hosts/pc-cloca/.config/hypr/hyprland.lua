@@ -65,16 +65,16 @@ hl.window_rule({
 
 -- terminal flotante (apps/system.lua)
 hl.window_rule({
-  match = {tag = "floating-window*"}, 
+  match = {tag = "floating-window"}, 
   size = {900, 600},
   pin = true
 })
 
 hl.window_rule({
   match = {initial_title = "Terminal"}, 
-  tag = '-default-opacity*',
-  size = {1100, 900}
+  opacity = "0.85 override"
 })
+
 
 --code
 hl.window_rule({

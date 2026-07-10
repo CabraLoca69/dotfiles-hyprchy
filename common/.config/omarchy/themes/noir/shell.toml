@@ -1,0 +1,164 @@
+# Omarchy shell visual tokens for Noir.
+
+[bar]
+background       = "#080706"
+background-alpha = 0.88
+text             = "#d0c3b4"
+active           = "#a5342f"
+scale-with-font  = true
+size-horizontal  = 28
+size-vertical    = 30
+
+[controls]
+normal-color        = "#d0c3b4"
+normal-fill-alpha   = 0.045
+normal-border       = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+normal-border-width = 1
+normal-border-alpha = 0.14
+
+hover-cursor-color        = "#7a8796"
+hover-cursor-fill-alpha   = 0.10
+hover-cursor-border       = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+hover-cursor-border-width = 1
+hover-cursor-border-alpha = 0.32
+
+focus-color        = "#7a8796"
+focus-fill-alpha   = 0.12
+focus-border       = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+focus-border-width = 1
+focus-border-alpha = 0.52
+
+selected-color        = "#f7f1ea"
+selected-fill-alpha   = 0.18
+selected-border       = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+selected-border-width = 1
+selected-border-alpha = 0.48
+
+pressed-color        = "#7a8796"
+pressed-fill-alpha   = 0.24
+selection-color      = "#7a8796"
+selection-fill-alpha = 0.30
+
+[spacing]
+scale = 1.02
+scale-with-font = true
+control-gap = 8
+control-padding-x = 11
+control-padding-y = 6
+input-padding-y = 7
+control-height = 29
+popup-row-height = 30
+row-gap = 8
+row-padding-x = 13
+label-gap = 4
+panel-gap = 15
+panel-padding = 19
+popup-padding = 15
+dropdown-width = 246
+searchable-dropdown-width = 266
+number-field-width = 122
+searchable-popup-min-height = 224
+
+[font]
+base-size = 12
+caption = 10
+body-small = 11
+body = 12
+subtitle = 13
+title = 14
+heading = 16
+display = 24
+display-large = 28
+icon-small = 11
+icon = 14
+icon-large = 18
+
+[popups]
+background       = "#040302"
+background-alpha = 0.94
+text             = "#d0c3b4"
+border           = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-alpha     = 0.78
+
+[tooltip]
+background       = "#040302"
+background-alpha = 0.96
+text             = "#d0c3b4"
+border           = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-alpha     = 0.58
+
+[notifications]
+background       = "#040302"
+background-alpha = 0.95
+text             = "#d0c3b4"
+border           = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-alpha     = 0.70
+countdown        = "#c08b4a"
+
+[launcher]
+background                = "#080706"
+background-alpha          = 0.94
+text                      = "#d0c3b4"
+border                    = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-alpha              = 0.42
+border-width              = 2
+scrim                     = "#080706"
+scrim-alpha               = 0.44
+selected-background       = "rgb(5a6674) rgb(96423c) rgb(080706) 90deg"
+selected-background-alpha = 0.10
+selected-text             = "#f7f1ea"
+selected-border           = "#96423c"
+selected-border-alpha     = 0.72
+selected-border-width     = 0
+selected-border-width-left = 4
+
+[menu]
+background                = "#080706"
+background-alpha          = 0.94
+text                      = "#d0c3b4"
+border                    = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-alpha              = 0.42
+border-width              = 2
+scrim                     = "#080706"
+scrim-alpha               = 0.44
+selected-background       = "rgb(5a6674) rgb(96423c) rgb(080706) 90deg"
+selected-background-alpha = 0.10
+selected-text             = "#f7f1ea"
+selected-border           = "#96423c"
+selected-border-alpha     = 0.72
+selected-border-width     = 0
+selected-border-width-left = 4
+
+[polkit]
+background       = "#040302"
+background-alpha = 0.97
+text             = "#d0c3b4"
+text-error       = "#a5342f"
+border           = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-error     = "#a5342f"
+border-alpha     = 0.96
+scrim            = "#080706"
+scrim-alpha      = 0.58
+accent           = "#c08b4a"
+
+[lock]
+background       = "#040302"
+background-alpha = 0.82
+text             = "#d0c3b4"
+placeholder      = "#8d8177"
+text-error       = "#a5342f"
+border           = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-active    = "rgb(080706) rgb(5a6674) rgb(96423c) rgb(080706) 135deg"
+border-error     = "#a5342f"
+border-alpha     = 0.95
+selection        = "#7a8796"
+selection-alpha  = 0.38
+
+[image-picker]
+scrim                   = "#080706"
+scrim-alpha             = 0.58
+text                    = "#d0c3b4"
+selected-border         = "#7a8796"
+selected-border-alpha   = 1.0
+unselected-border       = "#8d8177"
+unselected-border-alpha = 0.30

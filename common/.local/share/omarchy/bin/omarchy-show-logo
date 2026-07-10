@@ -1,9 +1,17 @@
 #!/bin/bash
-
-# omarchy:summary=Display the Omarchy logo in the terminal using green color.
-
+# omarchy:summary=Display the Omarchy logo (ASCII + image)
 clear
-echo -e "\033[34m"
-cat <~/.local/share/omarchy/logo.txt
-echo -e "\033[0m"
+
+cat ~/.local/share/omarchy/logo.txt
+if [ "$TERM" = "xterm-kitty" ]; then
+    img_width=18
+    margin=1
+
+    cols=$(tput cols)
+    img_col=$(( cols - img_width - margin ))
+
+    tput cup 0 "$img_col"
+    chafa --format kitty --size 15x20  ~/.local/share/omarchy/miku.png
+fi
+
 echo

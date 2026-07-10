@@ -1,0 +1,37 @@
+system: "base24"
+name: "Noir"
+slug: "noir"
+author: "J. S. Brown (github.com/OldJobobo)"
+variant: "dark"
+
+palette:
+  # --- spider noir / alley shadow ramp ---
+  base00: "#080706" # Alley Ink       - default background
+  base01: "#18130f" # Coat Shadow     - lighter background
+  base02: "#2d251f" # Pavement Slate  - selection background
+  base03: "#6f665f" # Fog Thread      - comments / muted text
+
+  base04: "#8d8177" # Newsprint Ash   - dark foreground
+  base05: "#9e9286" # Trench Linen    - default foreground
+  base06: "#d0c3b4" # Moonlit Paper   - light foreground
+  base07: "#f7f1ea" # Flashbulb White - brightest foreground
+
+  # --- case file accents ---
+  base08: "#96423c" # Spider Blood    - red / error
+  base09: "#a5342f" # Siren Rust      - orange / warning
+  base0A: "#a67a43" # Lamp Brass      - yellow
+  base0B: "#51604f" # Moss Signal     - green
+  base0C: "#8c6f4b" # Cigar Smoke     - cyan
+  base0D: "#5a6674" # Police Steel    - blue
+  base0E: "#7b5a6a" # Bruise Velvet   - purple
+  base0F: "#7a5138" # Cigar Umber     - brown / special
+
+  # --- base24 extension ---
+  base10: "#040302" # Cellar Black    - darker background
+  base11: "#010101" # Web Black       - darkest background
+  base12: "#a5342f" # Mask Blood      - bright red
+  base13: "#c08b4a" # Desk Amber      - bright orange / yellow
+  base14: "#667863" # Signal Moss     - bright green
+  base15: "#c4ab84" # Web Silk        - bright cyan
+  base16: "#7a8796" # Rooftop Steel   - bright blue
+  base17: "#967284" # Violet Smoke    - bright purple
