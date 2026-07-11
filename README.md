@@ -82,7 +82,7 @@ chequea antes de tocar algo.
 ### Flags útiles
 
 ```bash
-./install-all --atomic-bin           # ver sección "Red de seguridad de PATH" más abajo
+./install-all --atomic-bin           # ver sección [Red de seguridad de PATH](#red-de-seguridad-de-path---atomic-bin)
 ./install-hyprchy --atomic-bin       # lo mismo, corriendo solo ese paso
 
 ./install-all nombredir              # usa dotfiles-hyprchy/nombredir en vez de merged/
@@ -138,6 +138,10 @@ sea que se haya lanzado. `--atomic-bin` symlinkea `~/.local/bin/*` y
 Es una foto fija — si agregás un script nuevo después, hay que volver a correrlo (o symlinkealo
 a mano). No reemplaza a `~/.config/uwsm/env`, es el parche de "necesito que ande ya".
 
+Es una medida puntual y extrema para cuando `uwsm-app` se pone testarudo y no toma
+`~/.config/uwsm/env` de ninguna manera — no corre en el flujo normal de instalación (`main()` no
+la llama salvo que pases la flag explícitamente), no es algo que uses día a día.
+
 ## Cómo se arman los symlinks: `merged/`
 
 `common/` + `hosts/<hostname>/` **no se symlinkean directo a `$HOME`**. Antes de eso,
@@ -155,6 +159,40 @@ real ahí (por ejemplo `~/.config` casi seguro tiene carpetas de otras apps que 
 baja un nivel más y repite el chequeo adentro. Resultado: todo lo que no tiene mezcla con cosas
 ajenas al repo queda como un solo symlink de carpeta; solo se "abre" recursivamente donde hace
 falta.
+
+### Contenedores compartidos: por qué `.config`, `.local`, `.local/share` y `.cache` nunca se symlinkean enteros
+
+La regla de arriba ("si no existe todavía en `$HOME`, symlinkealo entero") es peligrosa aplicada
+sin criterio a un puñado de directorios muy particulares: `.config`, `.local`, `.local/share` y
+`.cache` no son carpetas de una sola app — son **contenedores genéricos** que usan decenas de
+programas ajenos al repo (fuentes, íconos, thumbnails, flatpak, mime, estado de otras apps, etc.).
+
+Si alguno de ellos **todavía no existe** en `$HOME` al momento de instalar (instalación en una
+cuenta nueva, o porque en algún momento lo borraste a mano mientras debugueabas algo), la regla
+genérica no tiene forma de distinguir "esto es mío" de "esto lo comparto con todo el sistema" —
+symlinkearía, por ejemplo, `~/.local/share` **entero** a `merged/.local/share` (que en el repo
+solo trae `omarchy/`). A partir de ahí, cualquier app que después escriba en
+`~/.local/share/lo-que-sea` termina escribiendo físicamente dentro de `merged/`, ensuciándolo con
+archivos que no son dotfiles.
+
+Por eso `install-hyprchy` trata estos cuatro paths como caso especial: **nunca** los symlinkea
+enteros, pase lo que pase — siempre fuerza que existan como directorio real en `$HOME` y baja un
+nivel más adentro, así solo terminan symlinkeadas las subcarpetas puntuales que sí son del repo
+(`.local/share/omarchy`, por ejemplo), nunca el contenedor completo. Si en algún momento alguno de
+estos cuatro paths quedó mal symlinkeado (de una corrida vieja, antes de este fix), `install-hyprchy`
+lo detecta y se autorepara solo la próxima vez que corra — deshace el symlink de golpe y reconstruye
+bien desde ahí.
+
+`.local/bin` queda **afuera** de esta lista a propósito: a diferencia de `.local/share`, esa
+carpeta es enteramente del repo (tus scripts propios, nada de apps de terceros escribiendo ahí),
+así que sí tiene sentido que se symlinkee entera como una sola unidad — es justamente lo que
+aprovecha `--atomic-bin` más arriba.
+
+⚠️ Si `~/.local/share` (u otro de estos contenedores) quedó mal symlinkeado por una corrida vieja
+y alguna app llegó a escribir cosas dentro de `merged/.local/share/` mientras tanto, `install-hyprchy`
+**no mueve solo** ese contenido de vuelta a su lugar — solo deshace el symlink y crea el directorio
+real vacío al lado. Revisá `merged/.local/share/` antes de reinstalar (o corré `./sync-to-repo` en
+dry-run, te lo va a listar como "no reconocido") y movés a mano lo que corresponda.
 
 Tres cosas puntuales, además, necesitan un symlink extra propio porque el programa que los
 consume busca en un lugar fijo del sistema, no dentro del árbol de `merged/`:
@@ -203,22 +241,44 @@ hagas ahí **no se reflejan solos en git**. Flujo de edición:
 
 ```bash
 # editás lo que necesites, directo en ~/.config/... (símlinks a merged/) o en merged/ mismo
-./sync-to-repo
+./sync-to-repo             # dry-run: te dice qué haría, no toca nada
+./sync-to-repo --apply     # aplica los cambios detectados al repo
 ```
 
-`sync-to-repo` recorre `merged/` y decide dónde va cada archivo:
+`sync-to-repo` no usa ningún archivo de estado/manifest — en cada corrida recalcula de nuevo, para
+cada archivo de `merged/`, a qué le corresponde bajar con la misma regla que usa `build-merged`
+para armar `merged/` (existe en `hosts/<hostname>/`? → ahí. si no, existe en `common/`? → ahí. si
+no existe en ninguno de los dos → archivo nuevo). Por diseño corre en dos etapas: **reporte
+primero, aplicación solo si pedís `--apply` explícitamente** — nunca escribe nada en la primera
+pasada.
 
-- Si ya existía como override de este host → se actualiza en `hosts/<hostname>/`.
-- Si ya existía como compartido → se actualiza en `common/`.
-- Si es un archivo **nuevo** (no existía en ninguno de los dos) → **te pregunta** si va a
-  `common/` (compartido con todas las máquinas) o a `hosts/<hostname>/` (solo esta), sin asumir
-  default.
+Lo que revisa en cada corrida:
 
-Al final, reporta como **huérfanos** los archivos que están en el repo pero ya no en `merged/`
-(los borraste) — nunca los borra solo del repo, es un aviso para que decidas vos si el borrado
-fue intencional y quieras `git rm` a mano.
+- **Archivos editados** — contenido de `merged/` distinto al del repo → se listan (y con
+  `--apply`, se copian) al destino que les corresponda (`common/` o `hosts/<hostname>/`).
+- **Archivos borrados** — existen en el repo pero ya no en `merged/` (los borraste desde `$HOME`)
+  → se listan, y con `--apply` se borran del repo (podando directorios que queden vacíos). Sin
+  `--apply` no se toca nada, es solo aviso.
+- **Archivos nuevos** — están en `merged/` pero no existen ni en `common/` ni en
+  `hosts/<hostname>/` → se listan aparte, **nunca se copian solos a ningún lado** (ni con
+  `--apply`). Hay que decidir a mano si van a `common/` (todas las máquinas) o a
+  `hosts/<hostname>/` (solo esta), copiarlos ahí, y volver a correr.
+- **Symlinks rotos en `$HOME`** — recorre `merged/` replicando la misma lógica de
+  directorio-entero-vs-bajar-un-nivel que usa `install-hyprchy` (ver sección anterior), y avisa si
+  algo dejó de ser symlink, falta directamente, o apunta a otro lado. Nunca repara nada solo —
+  hay que correr `./install-hyprchy` de nuevo después de resolver a mano cuál versión vale.
 
-Corré `git status` después de `sync-to-repo` como de costumbre, antes de comitear.
+Cada corrida queda guardada en `.sync-logs/` (gitignoreado, agregalo si no lo está), con nombre
+`sync-to-repo_<fecha>_<hora>_<dry-run|apply>.log` — útil para revisar después qué hizo una corrida
+con `--apply`, sobre todo si borró algo.
+
+**Paths que `sync-to-repo` ignora por completo** (ni se comparan, ni se reportan como nuevos, ni
+se chequean symlinks ahí): estado en runtime que ya está gitignoreado aparte, como
+`.config/omarchy/current/` (ver sección de [temas](#temas-currenttheme-no-vive-en-git) más abajo). 
+Están listados en el array `IGNORE_PATHS` al principio del script — para agregar uno nuevo, sumá la 
+ruta relativa (a `merged/`) ahí, matchea la ruta exacta y todo lo que cuelgue debajo.
+
+Corré `git status` después de `sync-to-repo --apply` como de costumbre, antes de comitear.
 
 ## Temas: `current/theme` no vive en git
 
@@ -226,7 +286,9 @@ Corré `git status` después de `sync-to-repo` como de costumbre, antes de comit
 `walker/themes/`, etc.) es **estado runtime derivado**, no un dotfile — lo genera el theme
 switcher (`theme-manager set <tema> ...`) a partir de los temas base reales. Intentar versionarlo
 en git como symlink terminaba rompiéndose (git no trackea bien un `git add` que atraviesa un
-symlink intermedio), así que directamente **no se versiona**:
+symlink intermedio), así que directamente **no se versiona**, y por el mismo motivo
+`sync-to-repo` lo tiene en su lista de paths ignorados (`IGNORE_PATHS`) — ni lo compara, ni lo
+reporta como archivo nuevo, ni se mete a chequear symlinks ahí:
 
 - El symlink fijo `~/.config/mako/config → ~/.config/omarchy/current/theme/mako.ini` lo recrea
   siempre `repair_internal_symlinks()` en cada corrida de `install-hyprchy` — no depende de git
@@ -326,8 +388,8 @@ anterior para el detalle de cómo se decide directorio-entero-symlinkeado vs. ba
 
 Si una máquina nueva no tiene carpeta en `hosts/`, el instalador avisa pero no falla — usa
 `common/` solo. Para agregar overrides de una máquina nueva, lo más simple es editar directo
-sobre `~/.config/...` (que apunta a `merged/`) y correr `./sync-to-repo` — te va a preguntar
-dónde va cada archivo nuevo.
+sobre `~/.config/...` (que apunta a `merged/`) y correr `./sync-to-repo` — te va a listar el
+archivo como nuevo para que decidas dónde va.
 
 ⚠️ Este esquema permite *agregar/reemplazar* archivos por host, pero no *excluir* uno que exista
 en `common/` (no hay forma de decir "en esta máquina, este archivo de común no va"). Si hace
@@ -414,8 +476,17 @@ desde la distro (ver "Filosofía / orden de instalación" arriba) y recién ahí
 `./install-all`.
 
 **Cambié algo en `~/.config/...` y no aparece en `git status`** — estás editando `merged/` (o un
-symlink que apunta ahí), que está gitignoreado a propósito. Corré `./sync-to-repo` para bajar
-el cambio a `common/` o `hosts/<hostname>/` según corresponda.
+symlink que apunta ahí), que está gitignoreado a propósito. Corré `./sync-to-repo` (dry-run) para
+ver qué detecta, y `./sync-to-repo --apply` para bajarlo a `common/` o `hosts/<hostname>/` según
+corresponda.
+
+**`~/.local/share` (u otro contenedor: `.config`, `.local`, `.cache`) aparece symlinkeado entero
+en vez de solo mis subcarpetas** — corriste una versión vieja de `install-hyprchy` de antes del
+fix de contenedores compartidos (ver sección [Cómo se arman los symlinks](#cómo-se-arman-los-symlinks-merged) 
+más arriba). Actualizá el script y volvé a correr `./install-hyprchy`: se detecta y se autorepara solo. 
+Si mientras tanto alguna app escribió cosas ahí adentro, van a quedar sueltas en `merged/.local/share/` 
+(o el contenedor que corresponda) — revisalo con `./sync-to-repo` (dry-run, te lo va a listar como "no
+reconocido") y movelo a mano de vuelta a su lugar antes de reinstalar.
 
 **mako no arranca / `Unable to parse configuration file`** — `~/.config/mako/config` quedó
 apuntando a un `current/theme/mako.ini` que no existe. Definí `DEFAULT_THEME` en
@@ -454,3 +525,8 @@ Este repo no parte de cero — toma prestado y adapta trabajo de varios proyecto
   [HANCORE](https://github.com/HANCORE-linux) 
   
 - **Temas de walker** - [rahulkumarparida](https://github.com/rahulkumarparida/Walker-themes)
+
+- **Theme-manager-plus** - [OldJobobo](https://github.com/OldJobobo/theme-manager-plus) - viene 
+instalado por practicidad, ya esta integrado a los menus y keybinds (leer su documentacion).
+
+- **Wallpaper-picker** - [yo mismo](https://github.com/CabraLoca69/Linux-WE-SimpleUi)

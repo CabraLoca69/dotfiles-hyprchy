@@ -15,10 +15,10 @@
 # que efectivamente copie los cambios detectados al repo.
 #
 # Uso:
-#   ./sync-repo                # dry-run, solo te dice qué haría
-#   ./sync-repo --apply        # aplica los cambios al repo
-#   ./sync-repo nombredir      # usa $DOTFILES_DIR/nombredir en vez de merged/
-#   ./sync-repo nombredir --apply
+#   ./sync-to-repo                # dry-run, solo te dice qué haría
+#   ./sync-to-repo --apply        # aplica los cambios al repo
+#   ./sync-to-repo nombredir      # usa $DOTFILES_DIR/nombredir en vez de merged/
+#   ./sync-to-repo nombredir --apply
 
 set -e
 
@@ -109,13 +109,13 @@ fi
 # ──────────────────────────────────────────────
 LOG_DIR="$DOTFILES_DIR/.sync-logs"
 mkdir -p "$LOG_DIR"
-LOG_FILE="$LOG_DIR/sync-repo_$(date +%Y%m%d_%H%M%S)_$([ "$APPLY" = true ] && echo apply || echo dry-run).log"
+LOG_FILE="$LOG_DIR/sync-to-repo_$(date +%Y%m%d_%H%M%S)_$([ "$APPLY" = true ] && echo apply || echo dry-run).log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 if [ "$APPLY" = true ]; then
-    section "sync-repo — modo APLICAR (host: $HOSTNAME_ID)"
+    section "sync-to-repo — modo APLICAR (host: $HOSTNAME_ID)"
 else
-    section "sync-repo — modo REPORTE, dry-run (host: $HOSTNAME_ID)"
+    section "sync-to-repo — modo REPORTE, dry-run (host: $HOSTNAME_ID)"
     warning "No se va a escribir nada. Corré con --apply para aplicar los cambios."
 fi
 info "Log de esta corrida: $LOG_FILE"
@@ -305,8 +305,8 @@ fi
 
 if [ "$APPLY" = false ] && { [ ${#updated[@]} -gt 0 ] || [ ${#deleted[@]} -gt 0 ]; }; then
     echo ""
-    info "Para aplicar los cambios de arriba al repo: ./sync-repo --apply"
+    info "Para aplicar los cambios de arriba al repo: ./sync-to-repo --apply"
 fi
 
 echo ""
-info "sync-repo terminado."
+info "sync-to-repo terminado."
