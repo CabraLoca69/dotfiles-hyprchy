@@ -9,7 +9,6 @@ if [ "$DEFAULT" = "True" ]; then
 fi
 
 mkdir -p "$STATE_DIR"
-# (por ejemplo si una corrida anterior de jq falló y truncó el estado).
 [ ! -s "$STATE" ] && echo '{"mode":"span","monitors":{}}' > "$STATE"
 
 # ── Helpers ────────────────────────────────────────────────────────────────
@@ -23,13 +22,20 @@ monitor_ids_json() {
 
 get_preview() {
   local dir="$WORKSHOP/$1"
+  local img=""
+
   if [ -f "$dir/preview.gif" ]; then
-    chafa --size=60x20 --colors=256 "$dir/preview.gif" 2>/dev/null
+    img="$dir/preview.gif"
   elif [ -f "$dir/preview.jpg" ]; then
-    chafa --size=60x20 --colors=256 "$dir/preview.jpg" 2>/dev/null
+    img="$dir/preview.jpg"
   else
     echo "[sin preview]"
+    return
   fi
+
+  printf '\033_Ga=d,d=A\033\\' 2>/dev/null
+
+  chafa --animate off --size=60x30 "$img" 2>/dev/null
 }
 export -f get_preview
 export WORKSHOP
@@ -161,7 +167,7 @@ case "$TARGET" in
   "─────────────────────") exit 0 ;;
 
   *)
-    # Es un monitor individual: "DP-1 (Izquierdo)"
+    # Es un monitor individual: ej "DP-1 (Izquierdo)"
     mon_id=$(echo "$TARGET" | cut -d' ' -f1)
     mon_label=$(monitor_label "$mon_id")
     selected=$(pick_wallpaper "$mon_label")

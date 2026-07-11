@@ -68,6 +68,7 @@ IGNORE_PATHS=(
     ".config/omarchy/current"
     ".config/waybar/config.jsonc"
     ".config/waybar/style.css"
+    ".config/hypr/hyprlock.conf"
 )
 
 is_ignored() {
