@@ -522,12 +522,12 @@ Este repo no parte de cero — toma prestado y adapta trabajo de varios proyecto
   opcionalmente para correr wallpapers de Wallpaper Engine (Steam) en Linux.
   No se distribuye en este repo; se instala como dependencia AUR
 
+- **Theme-manager-plus** - [OldJobobo](https://github.com/OldJobobo/theme-manager-plus) - viene 
+instalado por practicidad, ya esta integrado a los menus y keybinds (leer su documentacion).
+
 - **Waybars y temas** — [OldJobobo](https://github.com/OldJobobo) y
   [HANCORE](https://github.com/HANCORE-linux) 
   
 - **Temas de walker** - [rahulkumarparida](https://github.com/rahulkumarparida/Walker-themes)
-
-- **Theme-manager-plus** - [OldJobobo](https://github.com/OldJobobo/theme-manager-plus) - viene 
-instalado por practicidad, ya esta integrado a los menus y keybinds (leer su documentacion).
 
 - **Wallpaper-picker** - [yo mismo](https://github.com/CabraLoca69/Linux-WE-SimpleUi)
