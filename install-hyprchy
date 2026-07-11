@@ -288,6 +288,26 @@ EOF
 # ──────────────────────────────────────────────
 # Symlinks
 # ──────────────────────────────────────────────
+
+# Directorios "contenedor" que comparten un montón de apps ajenas al repo
+
+SHARED_CONTAINERS=(
+    ".config"
+    ".local"
+    ".local/share"
+    ".local/share/applications"
+    ".cache"
+)
+
+is_shared_container() {
+    local rel="$1"
+    local c
+    for c in "${SHARED_CONTAINERS[@]}"; do
+        [ "$rel" = "$c" ] && return 0
+    done
+    return 1
+}
+
 symlink() {
     local src="$1"
     local dst="$2"
@@ -316,7 +336,19 @@ link_merged() {
         entry_rel="${rel:+$rel/}$name"
         local t="$target/$name"
 
-        if [ -d "$entry" ] && [ ! -L "$entry" ] && [ -d "$t" ] && [ ! -L "$t" ]; then
+        if [ -d "$entry" ] && [ ! -L "$entry" ] && is_shared_container "$entry_rel"; then
+            # contenedor compartido con otras apps (.config, .local, .local/share,
+            # .cache): NUNCA se symlinkea entero, sin importar si ya existía o no.
+            # Se fuerza a que sea (o pase a ser) un directorio real y se baja adentro,
+            # así solo terminan symlinkeadas las subcarpetas puntuales que son
+            # nuestras (ej. .local/share/omarchy), nunca el contenedor completo.
+            if [ -L "$t" ]; then
+                warning "$t era un symlink de golpe (bug viejo) — deshaciendo para symlinkear contenido puntual."
+                rm "$t"
+            fi
+            mkdir -p "$t"
+            link_merged "$entry_rel"
+        elif [ -d "$entry" ] && [ ! -L "$entry" ] && [ -d "$t" ] && [ ! -L "$t" ]; then
             link_merged "$entry_rel"      # ya existe contenido real ahí -> bajar
         else
             symlink "$entry" "$t"         # symlink de golpe (archivo o carpeta entera)

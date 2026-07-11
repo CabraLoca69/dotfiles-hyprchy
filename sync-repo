@@ -1,0 +1,311 @@
+#!/usr/bin/env bash
+#SYNC-REPO
+#
+# Replica hacia el repo los cambios hechos en merged/ (que es donde vive
+# la copia física que terminás editando vía los symlinks de $HOME).
+#
+# No usa manifest: el origen de cada archivo se recalcula en cada corrida
+# con la MISMA regla que build-merged usa para armar merged/:
+#
+#   existe en hosts/<host>/rel ?  -> ese es el destino (host pisa common)
+#   si no, existe en common/rel ? -> ese es el destino
+#   si no existe en ninguno       -> archivo nuevo, se reporta, no se toca
+#
+# Por defecto corre en modo REPORTE (no escribe nada). Pasá --apply para
+# que efectivamente copie los cambios detectados al repo.
+#
+# Uso:
+#   ./sync-repo                # dry-run, solo te dice qué haría
+#   ./sync-repo --apply        # aplica los cambios al repo
+#   ./sync-repo nombredir      # usa $DOTFILES_DIR/nombredir en vez de merged/
+#   ./sync-repo nombredir --apply
+
+set -e
+
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+COMMON_DIR="$DOTFILES_DIR/common"
+HOSTNAME_ID="$(hostnamectl --static 2>/dev/null || hostname)"
+HOST_DIR="$DOTFILES_DIR/hosts/$HOSTNAME_ID"
+
+APPLY=false
+MERGED_NAME="merged"
+for arg in "$@"; do
+    case "$arg" in
+        --apply) APPLY=true ;;
+        *) MERGED_NAME="$arg" ;;
+    esac
+done
+MERGED_DIR="$DOTFILES_DIR/$MERGED_NAME"
+
+# ──────────────────────────────────────────────
+# Exclusiones: archivos que merged/ pisa con contenido específico de esta
+# máquina (templating) y por lo tanto NUNCA se replican al repo tal cual.
+# Sí se sigue chequeando que el symlink en $HOME esté sano.
+# Rutas relativas a merged/.
+# ──────────────────────────────────────────────
+EXCLUDE_PATHS=(
+    ".config/hyprland-preview-share-picker/config.yaml"
+)
+
+is_excluded() {
+    local rel="$1"
+    local ex
+    for ex in "${EXCLUDE_PATHS[@]}"; do
+        [ "$rel" = "$ex" ] && return 0
+    done
+    return 1
+}
+
+# ──────────────────────────────────────────────
+# Ignorados: subárboles enteros de estado en runtime que ni siquiera
+# están versionados (gitignoreados directamente). No se comparan, no se
+# reportan como "nuevos" ni como borrados, y ni se pisa el pie ahí para
+# chequear symlinks — quedan totalmente afuera de los 3 chequeos.
+# Rutas relativas a merged/ (o equivalente en común/host). Matchea la
+# ruta exacta y todo lo que cuelgue debajo.
+# ──────────────────────────────────────────────
+IGNORE_PATHS=(
+    ".config/omarchy/current"
+    ".config/waybar/config.jsonc"
+    ".config/waybar/style.css"
+)
+
+is_ignored() {
+    local rel="$1"
+    local ig
+    for ig in "${IGNORE_PATHS[@]}"; do
+        case "$rel" in
+            "$ig"|"$ig"/*) return 0 ;;
+        esac
+    done
+    return 1
+}
+
+# ──────────────────────────────────────────────
+# Colores (mismo estilo que install-hyprchy)
+# ──────────────────────────────────────────────
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+CYAN='\033[0;36m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+info()    { echo -e "${GREEN}[+]${NC} $1"; }
+warning() { echo -e "${YELLOW}[!]${NC} $1"; }
+error()   { echo -e "${RED}[x]${NC} $1"; }
+section() { echo -e "\n${CYAN}━━━ $1 ━━━${NC}"; }
+change()  { echo -e "${BLUE}[~]${NC} $1"; }
+
+if [ ! -d "$MERGED_DIR" ]; then
+    error "No encuentro $MERGED_DIR — corré antes ./build-merged"
+    exit 1
+fi
+
+# ──────────────────────────────────────────────
+# Log: todo lo que se imprime queda además en un archivo, para poder
+# revisar después qué hizo una corrida (sobre todo con --apply).
+# ──────────────────────────────────────────────
+LOG_DIR="$DOTFILES_DIR/.sync-logs"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/sync-repo_$(date +%Y%m%d_%H%M%S)_$([ "$APPLY" = true ] && echo apply || echo dry-run).log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
+if [ "$APPLY" = true ]; then
+    section "sync-repo — modo APLICAR (host: $HOSTNAME_ID)"
+else
+    section "sync-repo — modo REPORTE, dry-run (host: $HOSTNAME_ID)"
+    warning "No se va a escribir nada. Corré con --apply para aplicar los cambios."
+fi
+info "Log de esta corrida: $LOG_FILE"
+
+updated=()
+unknown=()
+broken_links=()
+deleted=()
+
+# ──────────────────────────────────────────────
+# Paso 1 y 2: recorrer merged/, resolver destino, comparar y (si --apply)
+# copiar al repo.
+# ──────────────────────────────────────────────
+sync_files() {
+    local rel src dst origin
+
+    while IFS= read -r -d '' file; do
+        rel="${file#"$MERGED_DIR"/}"
+        src="$MERGED_DIR/$rel"
+
+        if is_excluded "$rel"; then
+            continue
+        fi
+
+        if is_ignored "$rel"; then
+            continue
+        fi
+
+        if [ -e "$HOST_DIR/$rel" ]; then
+            dst="$HOST_DIR/$rel"
+            origin="host"
+        elif [ -e "$COMMON_DIR/$rel" ]; then
+            dst="$COMMON_DIR/$rel"
+            origin="common"
+        else
+            unknown+=("$rel")
+            continue
+        fi
+
+        if ! cmp -s "$src" "$dst" 2>/dev/null; then
+            updated+=("[$origin] $rel")
+            if [ "$APPLY" = true ]; then
+                mkdir -p "$(dirname "$dst")"
+                cp "$src" "$dst"
+            fi
+        fi
+    done < <(find "$MERGED_DIR" -type f -print0)
+}
+
+# ──────────────────────────────────────────────
+# Paso extra: detectar borrados. Un archivo que existe en common/ o en
+# hosts/<host>/ pero ya no en merged/ significa que lo borraste desde
+# $HOME y hay que reflejar ese borrado en el repo también.
+# ──────────────────────────────────────────────
+check_deletions() {
+    local rel src origin base_dir
+
+    for base_dir in "$COMMON_DIR" "$HOST_DIR"; do
+        [ -d "$base_dir" ] || continue
+        [ "$base_dir" = "$COMMON_DIR" ] && origin="common" || origin="host"
+
+        while IFS= read -r -d '' file; do
+            rel="${file#"$base_dir"/}"
+            is_excluded "$rel" && continue
+            is_ignored "$rel" && continue
+
+            if [ ! -e "$MERGED_DIR/$rel" ]; then
+                deleted+=("[$origin] $rel")
+                if [ "$APPLY" = true ]; then
+                    rm -f "$file"
+                    # poda directorios que queden vacíos por el borrado
+                    find "$(dirname "$file")" -type d -empty -delete 2>/dev/null || true
+                fi
+            fi
+        done < <(find "$base_dir" -type f -print0)
+    done
+}
+
+# ──────────────────────────────────────────────
+# Paso 3: chequear symlinks en $HOME. install-hyprchy (link_merged) NO
+# symlinkea archivo por archivo: si un directorio entero de merged/ no
+# tiene ya contenido real en $HOME, lo symlinkea DE GOLPE (ej. todo
+# .local/share/omarchy -> merged/.../omarchy en un solo link). Recién
+# baja a symlinkear adentro cuando encuentra que ese directorio ya
+# existe como carpeta real (no symlink) en $HOME.
+#
+# Este chequeo tiene que tomar exactamente la misma decisión en cada
+# nivel, si no, cualquier cosa debajo de un symlink de directorio se
+# reporta como "rota" por error (son archivos reales vistos A TRAVÉS
+# de un symlink, no symlinks en sí — y está bien que sea así).
+# ──────────────────────────────────────────────
+check_home_links() {
+    local rel="$1"
+    local src="$MERGED_DIR${rel:+/$rel}"
+    local target="$HOME${rel:+/$rel}"
+    local entry name entry_rel t resolved entry_real
+
+    for entry in "$src"/* "$src"/.[!.]*; do
+        [ -e "$entry" ] || [ -L "$entry" ] || continue
+        name="$(basename "$entry")"
+        entry_rel="${rel:+$rel/}$name"
+        t="$target/$name"
+
+        if is_ignored "$entry_rel"; then
+            continue
+        fi
+
+        if [ -d "$entry" ] && [ ! -L "$entry" ] && [ -d "$t" ] && [ ! -L "$t" ]; then
+            check_home_links "$entry_rel"   # mismo criterio que link_merged: bajar un nivel
+            continue
+        fi
+
+        # acá debería haber UN symlink en $t apuntando directo a $entry
+        # (sea $entry un archivo o un directorio entero)
+        if [ ! -e "$t" ] && [ ! -L "$t" ]; then
+            broken_links+=("FALTA en \$HOME: $entry_rel")
+            continue
+        fi
+
+        if [ ! -L "$t" ]; then
+            broken_links+=("NO ES SYMLINK (se separó del repo): $entry_rel")
+            continue
+        fi
+
+        resolved="$(readlink -f "$t" 2>/dev/null || true)"
+        entry_real="$(readlink -f "$entry" 2>/dev/null || true)"
+        if [ "$resolved" != "$entry_real" ]; then
+            broken_links+=("SYMLINK APUNTA A OTRO LADO: $entry_rel -> $resolved")
+        fi
+    done
+}
+
+sync_files
+check_deletions
+check_home_links ""
+
+# ──────────────────────────────────────────────
+# Reporte final
+# ──────────────────────────────────────────────
+section "Resultado"
+
+if [ ${#updated[@]} -eq 0 ]; then
+    info "Repo ya sincronizado con $MERGED_NAME/, nada para actualizar."
+else
+    if [ "$APPLY" = true ]; then
+        info "Aplicados ${#updated[@]} cambio(s) al repo:"
+    else
+        change "${#updated[@]} archivo(s) difieren del repo (dry-run, no se tocó nada):"
+    fi
+    for f in "${updated[@]}"; do
+        echo "    $f"
+    done
+fi
+
+if [ ${#deleted[@]} -gt 0 ]; then
+    echo ""
+    if [ "$APPLY" = true ]; then
+        change "${#deleted[@]} archivo(s) borrados del repo (ya no estaban en $MERGED_NAME/):"
+    else
+        change "${#deleted[@]} archivo(s) existen en el repo pero ya no en $MERGED_NAME/ (dry-run, no se borró nada):"
+    fi
+    for f in "${deleted[@]}"; do
+        echo "    $f"
+    done
+fi
+
+if [ ${#unknown[@]} -gt 0 ]; then
+    echo ""
+    warning "${#unknown[@]} archivo(s) en $MERGED_NAME/ no existen ni en common/ ni en hosts/$HOSTNAME_ID/:"
+    for f in "${unknown[@]}"; do
+        echo "    $f"
+    done
+    warning "Decidí a mano si van a common/ (todas las máquinas) o a hosts/$HOSTNAME_ID/ (solo esta),"
+    warning "copialos ahí y volvé a correr el script."
+fi
+
+if [ ${#broken_links[@]} -gt 0 ]; then
+    echo ""
+    error "${#broken_links[@]} problema(s) de symlinks en \$HOME:"
+    for f in "${broken_links[@]}"; do
+        echo "    $f"
+    done
+    warning "Si un archivo dejó de ser symlink, tu edición quedó separada del repo."
+    warning "Revisalo a mano: comparalo contra $MERGED_NAME/<mismo path>, decidí qué versión"
+    warning "vale, y volvé a correr ./install-hyprchy para restaurar el symlink."
+fi
+
+if [ "$APPLY" = false ] && { [ ${#updated[@]} -gt 0 ] || [ ${#deleted[@]} -gt 0 ]; }; then
+    echo ""
+    info "Para aplicar los cambios de arriba al repo: ./sync-repo --apply"
+fi
+
+echo ""
+info "sync-repo terminado."
