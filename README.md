@@ -82,7 +82,7 @@ chequea antes de tocar algo.
 ### Flags útiles
 
 ```bash
-./install-all --atomic-bin           # ver sección [Red de seguridad de PATH](#red-de-seguridad-de-path---atomic-bin)
+./install-all --atomic-bin           # ver sección [Red de seguridad de PATH] mas abajo
 ./install-hyprchy --atomic-bin       # lo mismo, corriendo solo ese paso
 
 ./install-all nombredir              # usa dotfiles-hyprchy/nombredir en vez de merged/
@@ -419,18 +419,13 @@ hiciste logout/login completo después de tocarlo.  Leer:
 [Red de seguridad de PATH](#red-de-seguridad-de-path---atomic-bin). Mientras tanto:
 `./install-hyprchy --atomic-bin`.
 
-**Walker no aplica tema / queda transparente** — revisá que `~/.config/omarchy/current/theme`
-resuelva a un tema real (`readlink -f ~/.config/omarchy/current/theme`), no a un symlink roto.
-Ademas config.toml debe existir, o al menos estar symlinkeado en el directorio .config/walker,
-aunque el instalador deberia cubrir ese caso especifico.
-
-**`omarchy-restart-walker` falla con "Unable to restart Walker"** — falta
-`~/.config/autostart/walker.desktop`. Correr `./install-hyprchy` de nuevo (es idempotente, lo
-symlinkea si el repo lo tiene).
-
 **pacman tira conflicto con `mesa-git` al instalar drivers** — `[cachyos]` habilitado.
 `install-drivers` te lo va a preguntar solo; si preferís hacerlo a mano, comentá el bloque
 `[cachyos]` en `/etc/pacman.conf`, corré `install-drivers`, y descomentalo después.
+
+**`paru: error while loading shared libraries: libalpm.so.N`** — te quedó un `paru-bin` viejo de
+antes de este fix. `sudo pacman -R paru-bin` y volvé a correr `install-hyprchy` (instala `paru`
+fuente).
 
 **`impala`/NetworkManager conectan la wifi pero nunca hay IP (`ip addr` solo muestra `link/ether`,
 sin `inet`)** — chequeá si NetworkManager tiene la interfaz como `unmanaged`:
@@ -452,10 +447,6 @@ sudo systemctl restart NetworkManager
 Reconectá después con `impala` o `nmcli device wifi connect "TU_RED"` y confirmá con
 `ip addr show wlan0` que ahora aparece una línea `inet 192.168.x.x/...`.
 
-**`paru: error while loading shared libraries: libalpm.so.N`** — te quedó un `paru-bin` viejo de
-antes de este fix. `sudo pacman -R paru-bin` y volvé a correr `install-hyprchy` (instala `paru`
-fuente).
-
 **`impala` no muestra tu wifi como "conocida" / `Operation failed` al conectar, aunque estés
 conectado** — pasa cuando la conexión inicial se hizo con `iwctl` directo desde la TTY del
 instalador de Arch (flujo típico, antes de que exista tu usuario/sesión), y `iwd` se quedó con
@@ -469,16 +460,16 @@ No se automatizó en el instalador a propósito — borrar conexiones de Network
 podría romper perfiles wifi que ya andaban bien en una instalación existente. Con Ethernet no
 debería pasar, no hay handshake de iwd/NetworkManager de por medio.
 
+**Cambié algo en `~/.config/...` y no aparece en `git status`** — estás editando `merged/` (o un
+symlink que apunta ahí), que está gitignoreado a propósito. Corré `./sync-to-repo` (dry-run) para
+ver qué detecta, y `./sync-to-repo --apply` para bajarlo a `common/` o `hosts/<hostname>/` según
+corresponda.
+
 **Vengo de Caelestia Shell (u otro shell/dotfiles ya armado sobre Hyprland) y algo no anda** —
 no está soportado instalar este repo encima de otro shell/config ya armado; en la práctica rompe
 cosas (probado con Caelestia Shell puntualmente). Lo más simple es reinstalar Hyprland limpio
 desde la distro (ver "Filosofía / orden de instalación" arriba) y recién ahí correr
 `./install-all`.
-
-**Cambié algo en `~/.config/...` y no aparece en `git status`** — estás editando `merged/` (o un
-symlink que apunta ahí), que está gitignoreado a propósito. Corré `./sync-to-repo` (dry-run) para
-ver qué detecta, y `./sync-to-repo --apply` para bajarlo a `common/` o `hosts/<hostname>/` según
-corresponda.
 
 **`~/.local/share` (u otro contenedor: `.config`, `.local`, `.cache`) aparece symlinkeado entero
 en vez de solo mis subcarpetas** — corriste una versión vieja de `install-hyprchy` de antes del
@@ -487,11 +478,6 @@ más arriba). Actualizá el script y volvé a correr `./install-hyprchy`: se det
 Si mientras tanto alguna app escribió cosas ahí adentro, van a quedar sueltas en `merged/.local/share/` 
 (o el contenedor que corresponda) — revisalo con `./sync-to-repo` (dry-run, te lo va a listar como "no
 reconocido") y movelo a mano de vuelta a su lugar antes de reinstalar.
-
-**mako no arranca / `Unable to parse configuration file`** — `~/.config/mako/config` quedó
-apuntando a un `current/theme/mako.ini` que no existe. Definí `DEFAULT_THEME` en
-`install-hyprchy` y corré `theme-manager set <nombre tema> -w -k --hyprlock` a mano, o
-volvé a correr `./install-hyprchy` si ya lo definiste.
 
 **activar/desactivar autologin** - System-bootstrap te pregunta si queres activar el autologin
 durante la instalacion, si pusiste que no y queres activarlo: 
@@ -508,6 +494,21 @@ asi que es cuestion de elegir nomas.
 
 Para desactivarlo se puede eliminar el archivo o borrar su contenido, cada vez que enciendas vas 
 a ver el login de tu display manager
+
+**mako no arranca / `Unable to parse configuration file`** — `~/.config/mako/config` quedó
+apuntando a un `current/theme/mako.ini` que no existe. Definí `DEFAULT_THEME` en
+`install-hyprchy` y corré `theme-manager set <nombre tema> -w -k --hyprlock` a mano, o
+volvé a correr `./install-hyprchy` si ya lo definiste.
+
+**Walker no aplica tema / queda transparente** — revisá que `~/.config/omarchy/current/theme`
+resuelva a un tema real (`readlink -f ~/.config/omarchy/current/theme`), no a un symlink roto.
+Ademas config.toml debe existir, o al menos estar symlinkeado en el directorio .config/walker,
+aunque el instalador deberia cubrir ese caso especifico.
+
+**`omarchy-restart-walker` falla con "Unable to restart Walker"** — falta
+`~/.config/autostart/walker.desktop`. Correr `./install-hyprchy` de nuevo (es idempotente, lo
+symlinkea si el repo lo tiene).
+
 
 ## Créditos
 
