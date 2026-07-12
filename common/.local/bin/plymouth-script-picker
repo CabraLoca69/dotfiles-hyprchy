@@ -1,0 +1,46 @@
+#!/bin/bash
+# plymouth-script-picker — selector + preview en vivo de temas de Plymouth
+set -euo pipefail
+
+#instala temas tipo script en este directorio, podras usar este script para 
+#previsualizarlos desde tty, cambia con ctrl + alt + F1/F2/F3
+THEMES_DIR="/usr/share/plymouth/themes"
+
+if ! command -v fzf &>/dev/null; then
+    echo "Falta fzf: sudo pacman -S fzf"
+    exit 1
+fi
+
+mapfile -t themes < <(find "$THEMES_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort)
+
+if [ ${#themes[@]} -eq 0 ]; then
+    echo "No se encontraron temas en $THEMES_DIR"
+    exit 1
+fi
+
+selected=$(printf '%s\n' "${themes[@]}" | fzf \
+    --prompt="Plymouth > " \
+    --height=90% \
+    --border=rounded \
+    --header="Enter: previsualizar en vivo (5s) | Esc: salir") || exit 0
+
+[ -z "$selected" ] && exit 0
+
+echo "Previsualizando: $selected"
+echo "(la pantalla puede parpadear un instante, es normal)"
+
+sudo plymouthd --tty="$(tty | sed 's|/dev/||')" --mode=boot --debug --pid-file=/tmp/plymouth-preview.pid &
+sleep 1
+sudo plymouth-set-default-theme "$selected"
+sudo plymouth --show-splash
+sleep 5
+sudo plymouth --quit
+sudo kill "$(cat /tmp/plymouth-preview.pid 2>/dev/null)" 2>/dev/null || true
+
+read -rp "¿Aplicar '$selected' como tema definitivo (regenera initramfs)? [s/N]: " confirm
+if [[ "$confirm" =~ ^[sS]$ ]]; then
+    sudo plymouth-set-default-theme -R "$selected"
+    echo "✓ Tema '$selected' aplicado y initramfs regenerado."
+else
+    echo "No se aplicó ningún cambio permanente."
+fi
