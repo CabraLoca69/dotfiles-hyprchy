@@ -1,8 +1,8 @@
 # dotfiles-hyprchy
-> ⚠️ **Solo Arch Linux y derivados** (probado en CachyOS). Los instaladores usan `pacman`/`paru`/AUR
-> directamente — no van a andar en Ubuntu, Fedora, Debian, etc. sin reescribir la capa de
-> instalación de paquetes. Hyprland en sí no es exclusivo de Arch, pero este repo específicamente
-> asume ese ecosistema.
+> ⚠️ **Solo Arch Linux y derivados** (probado en CachyOS y Arch). 
+> Los instaladores usan `pacman`/`paru`/AUR directamente — no van a andar en Ubuntu, Fedora, 
+> Debian, etc. sin reescribir la capa de instalación de paquetes. Hyprland en sí no es exclusivo 
+> de Arch, pero este repo específicamente asume ese ecosistema.
 
 Dotfiles personales de Hyprland, basadas en [Omarchy](https://github.com/basecamp/omarchy) pero
 desacopladas de su instalador — la idea es no traer el paquete completo de Omarchy (temas, apps,
