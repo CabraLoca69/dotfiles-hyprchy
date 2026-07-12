@@ -426,7 +426,7 @@ distro que también usa Limine, compartiendo la misma partición EFI (ESP). Paso
    Si la otra distro usa `limine-entry-tool`/`limine-snapper-sync` (típico en CachyOS), vas a ver
    bloques autogenerados con `comment: kernel-id=...` y snapshots — **no tocar nada de eso**.
 4. **Agregar un bloque manual para Arch**, antes de la sección `/+Other systems and bootloaders`
-   (o donde prefieras, el orden solo afecta el menú):
+   (o donde prefieras, el orden solo afecta el menú): 
 
 ```bash
 /+Arch Linux
@@ -435,7 +435,7 @@ protocol: linux
 path: boot():/vmlinuz-linux
 module_path: boot():/initramfs-linux.img
 cmdline: root=UUID=TU-UUID-AQUI rw
-´´´
+``` 
 
    El UUID es el de la partición **root de Arch**, no la ESP: `blkid -s UUID -o value /dev/tu_particion_root`.
 
