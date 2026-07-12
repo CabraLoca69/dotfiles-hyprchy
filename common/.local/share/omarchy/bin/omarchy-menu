@@ -94,16 +94,6 @@ show_style_menu() {
   esac
 }
 
-show_waybar_position_menu() {
-  case $(menu "Waybar Position" "󰁝  Top\n󰁅  Bottom\n󰁍  Left\n󰁔  Right") in
-  *Top*) omarchy-style-waybar-position top ;;
-  *Bottom*) omarchy-style-waybar-position bottom ;;
-  *Left*) omarchy-style-waybar-position left ;;
-  *Right*) omarchy-style-waybar-position right ;;
-  *) show_style_menu ;;
-  esac
-}
-
 show_background_menu() {
   omarchy-launch-or-focus -f -t 'Wallpaper-selector' wallpaper-picker
 }
@@ -118,19 +108,33 @@ show_font_menu() {
 }
 
 show_setup_config_menu() {
-  case $(menu "Setup" "  Hyprland\n  Hypridle\n  Hyprlock\n  Hyprsunset\n  Autostart\n  Bindings\n󰟵  Menu\n  Swayosd\n󰌧  Walker\n󰍜  Waybar\n󰞅  XCompose") in
-  *Hyprland*) open_in_editor "$(hypr_config_file hyprland)" ;;
-  *Hypridle*) open_in_editor ~/.config/hypr/hypridle.conf && omarchy-restart-hypridle ;;
-  *Hyprlock*) open_in_editor ~/.config/omarchy/current/theme/hyprlock.conf ;;
-  *Hyprsunset*) open_in_editor ~/.local/bin/hyprsunset_daynight.sh && omarchy-restart-hyprsunset ;;
-  *Autostart*) open_in_editor ~/.config/hypr/autostart.lua ;;
-  *Bindings*) open_in_editor ~/.config/hypr/bindings.lua;;
+  case $(menu "Setup" "  Hyprland\n  Menu\n  Aspect") in
+  *Hyprland*) show_setup_hyprland_menu;;
   *Menu*) open_in_editor ~/.local/share/omarchy/bin/omarchy-menu;;
-  *Swayosd*) open_in_editor ~/.config/swayosd/config.toml && omarchy-restart-swayosd ;;
-  *Walker*) open_in_editor ~/.config/walker/config.toml && omarchy-restart-walker ;;
-  *Waybar*) open_in_editor ~/.config/waybar/config.jsonc && omarchy-restart-waybar ;;
-  *XCompose*) open_in_editor ~/.XCompose && omarchy-restart-xcompose ;;
+  *Aspect*) show_themes_menu ;;
   *) show_main_menu ;;
+  esac
+}
+
+show_setup_hyprland_menu() {
+  case $(menu "Hypr" "  Hyprland\n  Bindings\n  Autostart\n  Hyprsunset\n  Hyprlock") in
+  *Hyprland*) open_in_editor "$(hypr_config_file hyprland)" ;;
+  *Bindings*) open_in_editor "$(hypr_config_file bindings)";;
+  *Autostart*) open_in_editor "$(hypr_config_file autostart)" ;;
+  *Hyprsunset*) open_in_editor ~/.local/bin/hyprsunset_daynight && omarchy-restart-hyprsunset ;;
+  *Hyprlock*) open_in_editor ~/.config/omarchy/current/theme/hyprlock.conf ;;
+  *)show_setup_config_menu ;;
+  esac
+}
+
+show_themes_menu() {
+  case $(menu "Visual" "♪ Theme\n󰍜  Waybar\n󰌧  Walker\n  Swayosd\n󰞅  XCompose" ) in
+  *Theme*) open_in_editor ~/.config/omarchy/current/theme/hyprland.lua && hyprctl reload ;;
+  *Waybar*) open_in_editor ~/.config/waybar/config.jsonc && omarchy-restart-waybar ;;
+  *Walker*) open_in_editor ~/.config/walker/config.toml && omarchy-restart-walker ;;
+  *Swayosd*) open_in_editor ~/.config/swayosd/config.toml && omarchy-restart-swayosd ;;
+  *XCompose*) open_in_editor ~/.XCompose && omarchy-restart-xcompose ;;
+  *)show_setup_config_menu ;; 
   esac
 }
 

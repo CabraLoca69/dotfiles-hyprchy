@@ -21,10 +21,10 @@ WE_ARGS=(--silent --disable-mouse)
 # el path suele ser /home/usuario/.steam/steam o /mnt/disco/SteamLibrary
 
 # */SteamLibrary/steamapps/common/wallpaper_engine/assets
-ASSETS="/mnt/ssd/SteamLibrary/steamapps/common/wallpaper_engine/assets"
+ASSETS="/mnt/ssd/games/steam/steamapps/common/wallpaper_engine/assets"
 
 # */SteamLibrary/steamapps/workshop/content/431960" <- ese numero es el id de wallpaper engine dentro de steam
-WORKSHOP="/mnt/ssd/SteamLibrary/steamapps/workshop/content/431960"
+WORKSHOP="/mnt/ssd/games/steam/steamapps/workshop/content/431960"
 
 #son los archivos de configuracion y recuperacion al encender del script, mover a discrecion
 STATE_DIR="$HOME/.config/wallpaperengine"
