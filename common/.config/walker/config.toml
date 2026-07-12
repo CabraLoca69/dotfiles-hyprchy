@@ -46,7 +46,7 @@ prefix = "$"
 provider = "clipboard"
 
 [[providers.prefixes]]
-prefix = "!"
+prefix = "<"
 provider = "menus:games"
 
 [[emergencies]]
