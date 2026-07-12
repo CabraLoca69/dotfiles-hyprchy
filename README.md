@@ -411,6 +411,97 @@ merged(o nombredir)/                         # GENERADO, puede estar gitignoread
                                              # no editar el repo acá directo pensando que persiste solo con git
 `````
 
+## Dual-boot con ESP compartida (Limine)
+
+No hay instalador para esto — es 100% manual, y solo aplica si instalaste Arch junto a otra
+distro que también usa Limine, compartiendo la misma partición EFI (ESP). Pasos generales:
+
+1. **No crear una segunda ESP.** Un solo `/boot` (la partición `vfat`/FAT32 existente) montado
+   para ambos sistemas — Limine necesita una sola ESP para listar todas las entradas.
+2. **Instalar el kernel y el paquete `limine` de Arch normalmente** (`pacstrap` con `linux`,
+   `linux-firmware`; `pacman -S limine` dentro del chroot). No hace falta reinstalar el binario
+   EFI de Limine si la otra distro ya lo tiene — es el mismo bootloader, solo hay que agregarle
+   una entrada de arranque nueva a su configuración existente.
+3. **Ubicar el `limine.conf` real** (`find /boot -iname "limine.conf" -o -iname "limine.cfg"`).
+   Si la otra distro usa `limine-entry-tool`/`limine-snapper-sync` (típico en CachyOS), vas a ver
+   bloques autogenerados con `comment: kernel-id=...` y snapshots — **no tocar nada de eso**.
+4. **Agregar un bloque manual para Arch**, antes de la sección `/+Other systems and bootloaders`
+   (o donde prefieras, el orden solo afecta el menú):
+
+```bash
+/+Arch Linux
+//Arch Linux
+protocol: linux
+path: boot():/vmlinuz-linux
+module_path: boot():/initramfs-linux.img
+cmdline: root=UUID=TU-UUID-AQUI rw
+´´´
+
+   El UUID es el de la partición **root de Arch**, no la ESP: `blkid -s UUID -o value /dev/tu_particion_root`.
+
+   ⚠️ **Revisá el bloque con `grep -A5 "Arch Linux" /boot/limine.conf` después de editar.**
+   Un typo acá (UUID sin el prefijo `UUID=`, o cualquier letra de más/de menos) manda directo a
+   `emergency mode` en el próximo boot (`Failed to mount /sysroot`). Si eso pasa: bootear a la
+   otra distro, entrar por SSH o TTY, y comparar `blkid` contra lo que quedó en `limine.conf`
+   caracter por caracter.
+
+**`pacman` tira "error: no se pudo realizar la operación (archivos en conflicto)" al instalar
+`intel-ucode`/`amd-ucode`** (o potencialmente otro paquete que deje archivos sueltos en la ESP)
+— pasa porque la ESP es compartida y la otra distro ya tiene ese archivo instalado desde su
+propia base de datos de pacman; la tuya no lo sabe. Es seguro pisarlo, es el mismo binario
+upstream:
+
+```bash
+sudo pacman -S intel-ucode --overwrite '/boot/intel-ucode.img'
+```
+
+(cambiá el nombre del archivo según cuál sea el conflicto puntual)
+
+## Plymouth (splash de arranque/apagado)
+
+No viene instalado ni activado por defecto en una instalación base de Arch. Pasos:
+
+1. **Instalar y elegir tema:**
+```bash
+   sudo pacman -S plymouth                  # install-hyprchy deberia instalarlo por defecto 
+   plymouth-set-default-theme --list        # ver temas disponibles
+   sudo plymouth-set-default-theme -R bgrt  # -R regenera el initramfs al final
+```
+
+2. **Agregar el hook `plymouth` a `/etc/mkinitcpio.conf`.** El nombre es **`plymouth`
+   siempre**, tanto en HOOKS estilo `udev` como estilo `systemd` — `sd-plymouth` no existe como
+   paquete/hook en Arch, si lo ves mencionado en algún lado es de otra distro. Lo único que
+   cambia entre familias es la posición:
+   - Estilo `udev`: después de `base udev`, antes de `autodetect`.
+   - Estilo `systemd` (`HOOKS=(base systemd ...)`, común en CachyOS/derivados): después de
+     `sd-vconsole`.
+
+```bash
+   sudo mkinitcpio -P
+```
+
+3. **Agregar `quiet splash` al `cmdline`** de tu entrada en `limine.conf` (o el bootloader que
+   uses) — sin esto, el kernel sigue mostrando el log de texto normal aunque Plymouth esté bien
+   instalado.
+
+**`mkinitcpio -P` tira "ERROR: Hook 'plymouth' cannot be found" (o `sd-plymouth`)** — o falta
+el paquete `plymouth`, o está mal escrito el nombre del hook, o está en la posición equivocada
+según la familia de HOOKS (ver punto 2 arriba). Confirmá con `pacman -Ql plymouth | grep hook`
+qué nombre de hook provee realmente el paquete instalado.
+
+**No aparece el splash aunque no haya errores en `mkinitcpio -P`** — chequeá en este orden:
+1. `grep -A5 "Arch Linux" /boot/limine.conf` — ¿tiene `quiet splash` bien escrito (sin typos
+   tipo `slpash`)?
+2. `plymouth-set-default-theme` (sin argumentos) — ¿devuelve un tema, o vacío/error?
+3. `lsinitcpio /boot/initramfs-linux.img | grep plymouth` — ¿aparece contenido, o nada?
+
+### Previsualizar temas de Plymouth sin reiniciar
+
+Si bajaste temas de terceros (AUR o manuales en `/usr/share/plymouth/themes/`) y no tenés forma
+de ver cómo quedan antes de aplicarlos: **no se puede previsualizar corriendo Wayland/X11
+encima** (Plymouth necesita el framebuffer/DRM libre). Cambiar a una TTY sin compositor gráfico
+corriendo (`Ctrl+Alt+F3`, por ejemplo), loguearse ahí, y correr el tema en modo debug — volver
+con `Ctrl+Alt+F1`/`F2` al terminar. Script de ejemplo: [pegar acá tu `plymouth-picker.sh`].
 
 ## Troubleshooting rápido
 
