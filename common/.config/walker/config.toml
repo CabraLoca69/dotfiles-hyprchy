@@ -18,7 +18,6 @@ max_results = 256 # 256 should be enough for everyone
 default = [
   "desktopapplications",
   "websearch",
-  "menus"
 ]
 
 [[providers.prefixes]]
@@ -44,10 +43,6 @@ provider = "websearch"
 [[providers.prefixes]]
 prefix = "$"
 provider = "clipboard"
-
-[[providers.prefixes]]
-prefix = "<"
-provider = "menus:games"
 
 [[emergencies]]
 text = "Restart Walker"

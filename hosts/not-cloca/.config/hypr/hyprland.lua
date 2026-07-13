@@ -22,17 +22,6 @@ require("hypr.apps.system")
 -- Toggle config flags dynamically.
 require("hypr.toggles")
 
--- Add any other personal Hyprland configuration below.
--- o.window("qemu", { workspace = "5" })
-
-
---directorio de capturas
-hl.env("OMARCHY_SCREENSHOT_DIR", "/home/cloca/Imágenes/Screenshots")
-
---directorio de grabacion de pantalla
-hl.env("OMARCHY_SCREENRECORD_DIR", "/home/cloca/ssd/Videos/Screenrecording")
-
-
 -- nautilus 
 hl.window_rule({
   match = {class = "org.gnome.Nautilus"},

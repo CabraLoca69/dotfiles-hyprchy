@@ -25,8 +25,8 @@ require("hypr.toggles")
 --directorio de capturas
 hl.env("OMARCHY_SCREENSHOT_DIR", "/home/cloca/Imágenes/Screenshots")
 
--- Add any other personal Hyprland configuration below.
--- o.window("qemu", { workspace = "5" })
+--cursor
+hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")
 
 -- juegos de steam abren a la izquierda
 hl.window_rule(
