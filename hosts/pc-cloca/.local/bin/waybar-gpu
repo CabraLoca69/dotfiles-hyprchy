@@ -10,7 +10,7 @@ if [ -z "$GPU_HWMON" ] || [ ! -d "$GPU_HWMON" ]; then
     echo "GPU_HWMON=\"$GPU_HWMON\"" > "$CACHE"
 fi
 
-GPU_USE=$(rocm-smi --showuse 2>/dev/null | grep "GPU use" | awk '{print $NF}' | tr -d '%')
+GPU_USE=$(cat "$GPU_HWMON/device/gpu_busy_percent")
 GPU_WATTS=$(awk '{printf "%.0f", $1/1000000}' "$GPU_HWMON/power1_average")
 GPU_TEMP=$(awk '{printf "%.0f", $1/1000}' "$GPU_HWMON/temp1_input")
 

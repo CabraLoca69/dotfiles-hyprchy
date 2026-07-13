@@ -127,6 +127,7 @@ hl.config({
   cursor = {
     hide_on_key_press = true,
     warp_on_change_workspace = 1,
+    no_hardware_cursors = true,
   },
 
   binds = {
