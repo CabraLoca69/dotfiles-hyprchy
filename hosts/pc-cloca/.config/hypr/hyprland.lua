@@ -22,9 +22,6 @@ require("hypr.apps.system")
 -- Toggle config flags dynamically.
 require("hypr.toggles")
 
---directorio de capturas
-hl.env("OMARCHY_SCREENSHOT_DIR", "/home/cloca/Imágenes/Screenshots")
-
 --cursor
 hl.env("HYPRCURSOR_THEME", "rose-pine-hyprcursor")
 

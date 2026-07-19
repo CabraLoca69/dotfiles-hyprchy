@@ -18,3 +18,11 @@ hl.monitor({
     vrr = 0,
 })
 
+-- tv por hdmi
+hl.monitor({  
+     output = "HDMI-A-1",
+     mode = "1366x768@60",
+     position = "-1366x0",
+     vrr = 0,
+     scale = 1,  
+})

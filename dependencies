@@ -75,6 +75,9 @@ PACMAN_DEPS=(
     noto-fonts-emoji
     ttf-jetbrains-mono-nerd
     noto-fonts-cjk
+    gsettings-desktop-schemas
+    dconf
+    rsync
 )
 
 AUR_DEPS=(

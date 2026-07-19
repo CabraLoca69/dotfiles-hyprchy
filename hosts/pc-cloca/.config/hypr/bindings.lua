@@ -22,7 +22,7 @@ o.bind("SUPER + ALT + C", "Wallpaper selector", "omarchy-launch-or-focus -f -t '
 o.bind("SUPER + ALT + CTRL + U", "Update system", "omarchy-launch-or-focus -f -d -t 'Update' paru -Syu")
 
 -- obs keybindings
-o.bind("CTRL + SHIFT + F1",
+o.bind("CTRL + ALT + HOME",
         "Obs Clip",
         hl.dsp.pass({
                 window = "class:^(com\\.obsproject\\.Studio)$" })
