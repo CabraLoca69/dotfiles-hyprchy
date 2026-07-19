@@ -523,6 +523,38 @@ set_default_theme() {
     info "waybar, hyprlock y btop apuntando a '$DEFAULT_THEME'."
 }
 
+# todavia sin probar.
+setup_gtk_dark_scheme() {
+    section "Dark mode para apps GTK (default de sistema vía dconf)"
+
+    if ! command -v dconf &>/dev/null; then
+        warning "dconf no está instalado, salteando (¿está en PACMAN_DEPS?)."
+        return
+    fi
+
+    sudo mkdir -p /etc/dconf/db/local.d
+    sudo tee /etc/dconf/db/local.d/01-dark-theme >/dev/null << 'EOF'
+[org/gnome/desktop/interface]
+color-scheme='prefer-dark'
+gtk-theme='Adwaita'
+EOF
+
+    # profile "user" necesario para que dconf lea la db local además de la default
+    sudo mkdir -p /etc/dconf/profile
+    if [ ! -f /etc/dconf/profile/user ]; then
+        sudo tee /etc/dconf/profile/user >/dev/null << 'EOF'
+user-db:user
+system-db:local
+EOF
+    elif ! grep -q "^system-db:local$" /etc/dconf/profile/user; then
+        echo "system-db:local" | sudo tee -a /etc/dconf/profile/user >/dev/null
+    fi
+
+    sudo dconf update
+    info "Defaults de dconf compilados. Toman efecto en el próximo login gráfico."
+    info "(Son defaults, no locks — nwg-look después los puede overridear por usuario sin problema.)"
+}
+
 # ──────────────────────────────────────────────
 # Templating de configs con paths absolutos
 # ──────────────────────────────────────────────
@@ -601,6 +633,7 @@ main() {
     enable_elephant
     template_share_picker_config
     set_default_theme
+    setup_gtk_dark_scheme
 
     if [[ " $* " == *" --atomic-bin "* ]]; then
         atomic_bin_symlinks
