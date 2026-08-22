@@ -5,5 +5,13 @@
 
 set -e
 
+LOG_DIR="$HOME/.local/share/omarchy/logs"
+LOG_FILE="$LOG_DIR/system-update-$(date +%d-%m_%H-%M).log"
+
+mkdir -p "$LOG_DIR"
+
 echo -e "\e[32m\nUpdate system packages\e[0m"
-sudo paru -Syyu 
+
+sudo paru -Syyu | tee "$LOG_FILE"
+
+echo -e "\e[32m\nLog guardado en: $LOG_FILE\e[0m"

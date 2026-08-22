@@ -46,6 +46,7 @@ MERGED_DIR="$DOTFILES_DIR/$MERGED_NAME"
 EXCLUDE_PATHS=(
     ".config/hyprland-preview-share-picker/config.yaml"
     ".config/wallpaperengine/last_wallpaper.json"
+    ".local/share/omarchy/logs/"
 )
 
 is_excluded() {
