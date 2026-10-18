@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# omarchy:summary=Prints the remaining battery percentage as an integer (empty if no battery)
+
+battery=$(upower -e | grep -m1 'BAT')
+[[ -z $battery ]] && exit 0
+
+upower -i "$battery" |
+  awk -F: '/percentage/ {
+    gsub(/[%[:space:]]/, "", $2)   # "  87%" -> "87"
+    sub(/,/, ".", $2)              # por si el locale usa coma decimal
+    printf "%d\n", $2 + 0.5        # redondea a entero
+    exit
+  }'
